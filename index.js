@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 const program = require('commander');
-const chokidar = require('chokidar');
-const hasha = require('hasha');
 const path = require('path');
+const createWatcher = require('./src/fs/create-watcher');
+const createStream = require('./src/fs/create-stream');
 
 program
   .version('0.0.1')
@@ -16,19 +16,9 @@ if (typeof program.args[0] === 'undefined') {
 
 const directory = path.normalize(program.args[0]);
 
-chokidar.watch('.', {
-  ignored: /(^|[/\\])\../,
-  cwd: directory,
-  awaitWriteFinish: true,
-}).on('all', (event, p) => {
-  switch (event) {
-    case 'add':
-      hasha.fromFile(path.resolve(directory, p), { algorithm: 'sha1' }).then((hash) => {
-        console.log(hash);
-      });
-      break;
-    default:
-      console.log(event, p);
-      break;
-  }
+const watcher = createWatcher(directory);
+const stream = createStream(watcher);
+
+stream.subscribe((data) => {
+  console.log(data);
 });
