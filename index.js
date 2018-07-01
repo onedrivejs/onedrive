@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 const program = require('commander');
 const path = require('path');
-const createWatcher = require('./src/fs/create-watcher');
-const createStream = require('./src/fs/create-stream');
+const createStream = require('./src/fs/stream');
 
 program
   .version('0.0.1')
@@ -16,8 +15,7 @@ if (typeof program.args[0] === 'undefined') {
 
 const directory = path.normalize(program.args[0]);
 
-const watcher = createWatcher(directory);
-const stream = createStream(watcher);
+const stream = createStream(directory);
 
 stream.subscribe((data) => {
   console.log(data);

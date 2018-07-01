@@ -1,26 +1,26 @@
 const EventEmitter = require('events');
-const createStream = require('./create-stream');
+const chokidar = require('chokidar');
+const createStream = require('./stream');
+
+jest.mock('chokidar');
+
+const watcher = new EventEmitter();
+watcher.options = {
+  cwd: 'data',
+};
+
+chokidar.watch = jest.fn(() => watcher);
 
 test('creates a filesystem stream', () => {
-  const watcher = new EventEmitter();
-  watcher.options = {
-    cwd: 'data',
-  };
-
-  const stream = createStream(watcher);
+  const stream = createStream('data');
 
   expect(stream).toBeDefined();
 });
 
 test('sends a test event through the stream', () => {
-  const watcher = new EventEmitter();
-  watcher.options = {
-    cwd: 'data',
-  };
-
   expect.assertions(1);
   return new Promise((resolve) => {
-    createStream(watcher).subscribe((data) => {
+    createStream('data').subscribe((data) => {
       expect(data).toEqual({
         event: 'test',
         path: 'what/what.jpg',
