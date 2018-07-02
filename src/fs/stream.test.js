@@ -1,5 +1,6 @@
 const EventEmitter = require('events');
 const chokidar = require('chokidar');
+const { take } = require('rxjs/operators');
 const createStream = require('./stream');
 
 jest.mock('chokidar');
@@ -18,16 +19,12 @@ test('creates a filesystem stream', () => {
 });
 
 test('sends a test event through the stream', () => {
-  expect.assertions(1);
-  return new Promise((resolve) => {
-    createStream('data').subscribe((data) => {
-      expect(data).toEqual({
-        event: 'test',
-        path: 'what/what.jpg',
-      });
-      resolve(data);
-    });
+  const data = createStream('data').pipe(take(1)).toPromise();
 
-    watcher.emit('all', 'test', 'what/what.jpg');
+  watcher.emit('all', 'test', 'what/what.jpg');
+
+  return expect(data).resolves.toEqual({
+    event: 'test',
+    path: 'what/what.jpg',
   });
 });
