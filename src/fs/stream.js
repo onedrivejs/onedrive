@@ -2,7 +2,7 @@ const path = require('path');
 const hasha = require('hasha');
 const chokidar = require('chokidar');
 const { fromEvent, of } = require('rxjs');
-const { flatMap } = require('rxjs/operators');
+const { filter, flatMap } = require('rxjs/operators');
 
 const stream = (directory) => {
   const cwd = path.normalize(directory);
@@ -13,6 +13,8 @@ const stream = (directory) => {
   });
 
   return fromEvent(watcher, 'all').pipe(
+    // Ensure that the path is not empty.
+    filter(data => !!data[1]),
     flatMap(([event, p]) => {
       switch (event) {
         case 'add':

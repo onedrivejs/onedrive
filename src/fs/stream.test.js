@@ -21,6 +21,7 @@ test('creates a filesystem stream', () => {
 test('sends a test event through the stream', () => {
   const data = createStream('data').pipe(take(1)).toPromise();
 
+  watcher.emit('all', 'test', '');
   watcher.emit('all', 'test', 'what/what.jpg');
 
   return expect(data).resolves.toEqual({
