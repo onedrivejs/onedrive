@@ -25,5 +25,17 @@
   "bugs": {
     "url": "https://github.com/onedrive-js/onedrive/issues"
   },
-  "homepage": "https://github.com/onedrive-js/onedrive#readme"
+  "homepage": "https://github.com/onedrive-js/onedrive#readme",
+  "jest": {
+    "roots": ["src"],
+    "collectCoverage": true,
+    "coverageThreshold": {
+      "global": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      }
+    }
+  }
 }
