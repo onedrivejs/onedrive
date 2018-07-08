@@ -68,8 +68,6 @@ test('sends a move event through the stream', () => {
 
   // Init.
   watcher.emit('all', 'add', 'what/what.jpg');
-  watcher.emit('all', 'unlink', 'what/what.jpg');
-  watcher.emit('all', 'add', 'what/what2.jpg');
   // At somepoint in the future.
   setTimeout(() => {
     watcher.emit('all', 'unlink', 'what/what.jpg');
