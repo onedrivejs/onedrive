@@ -68,11 +68,13 @@ test('sends a move event through the stream', () => {
 
   // Init.
   watcher.emit('all', 'add', 'what/what.jpg');
+  watcher.emit('all', 'unlink', 'what/what.jpg');
+  watcher.emit('all', 'add', 'what/what2.jpg');
   // At somepoint in the future.
   setTimeout(() => {
     watcher.emit('all', 'unlink', 'what/what.jpg');
     watcher.emit('all', 'add', 'what/what2.jpg');
-  });
+  }, 200);
 
   return expect(data).resolves.toEqual({
     event: 'move',
@@ -93,7 +95,7 @@ test('sends a delete event through the stream', () => {
   // At somepoint in the future.
   setTimeout(() => {
     watcher.emit('all', 'unlink', 'what/what.jpg');
-  });
+  }, 200);
 
   return expect(data).resolves.toEqual({
     event: 'delete',
