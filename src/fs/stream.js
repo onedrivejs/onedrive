@@ -67,7 +67,7 @@ const stream = (directory) => {
         case 'change':
           store = store.set(data.path, data.hash);
           return of(data);
-        // @TODO Use join operator instead of this nonsense.
+        // @TODO Use groupByUntil operator instead of this nonsense.
         case 'add':
           return of(data).pipe(
             flatMap((h) => {
