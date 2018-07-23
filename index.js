@@ -13,7 +13,7 @@ if (typeof program.args[0] === 'undefined') {
   process.exit(1);
 }
 
-const directory = path.normalize(program.args[0]);
+const directory = path.resolve(program.args[0]);
 
 const stream = createStream(directory);
 

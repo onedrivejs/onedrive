@@ -1,13 +1,18 @@
-const EventEmitter = require('events');
-const chokidar = require('chokidar');
-const hasha = require('hasha');
+const { Client } = require('fb-watchman');
 const { take } = require('rxjs/operators');
 const createStream = require('./stream');
 
-jest.mock('chokidar');
-jest.mock('hasha');
+jest.mock('fb-watchman', () => {
+  const EventEmitter = require('events');
+  const mockClient = new EventEmitter();
+  mockClient.command = jest.fn();
 
-hasha.fromFile = jest.fn(() => Promise.resolve('abcdef'));
+  return {
+    Client: function() {
+      return mockClient;
+    },
+  };
+});
 
 test('creates a filesystem stream', () => {
   const stream = createStream('data');
@@ -16,13 +21,11 @@ test('creates a filesystem stream', () => {
 });
 
 test('sends a test event through the stream', () => {
-  const watcher = new EventEmitter();
-  chokidar.watch = jest.fn(() => watcher);
-
+  const client = new Client();
   const data = createStream('data').pipe(take(1)).toPromise();
 
-  watcher.emit('all', 'test', '');
-  watcher.emit('all', 'test', 'what/what.jpg');
+  client.emit('subscription', 'test', '');
+  client.emit('subscription', 'test', 'what/what.jpg');
 
   return expect(data).resolves.toEqual({
     event: 'test',
@@ -31,12 +34,10 @@ test('sends a test event through the stream', () => {
 });
 
 test('sends an add event through the stream', () => {
-  const watcher = new EventEmitter();
-  chokidar.watch = jest.fn(() => watcher);
-
+  const client = new Client();
   const data = createStream('data').pipe(take(1)).toPromise();
 
-  watcher.emit('all', 'add', 'what/what.jpg');
+  client.emit('subscription', 'add', 'what/what.jpg');
 
   return expect(data).resolves.toEqual({
     event: 'add',
@@ -46,12 +47,10 @@ test('sends an add event through the stream', () => {
 });
 
 test('sends a change event through the stream', () => {
-  const watcher = new EventEmitter();
-  chokidar.watch = jest.fn(() => watcher);
-
+  const client = new Client();
   const data = createStream('data').pipe(take(1)).toPromise();
 
-  watcher.emit('all', 'change', 'what/what.jpg');
+  client.emit('subscription', 'change', 'what/what.jpg');
 
   return expect(data).resolves.toEqual({
     event: 'change',
@@ -61,17 +60,15 @@ test('sends a change event through the stream', () => {
 });
 
 test('sends a move event through the stream', () => {
-  const watcher = new EventEmitter();
-  chokidar.watch = jest.fn(() => watcher);
-
+  const client = new Client();
   const data = createStream('data').pipe(take(2)).toPromise();
 
   // Init.
-  watcher.emit('all', 'add', 'what/what.jpg');
+  client.emit('subscription', 'add', 'what/what.jpg');
   // At somepoint in the future.
   setTimeout(() => {
-    watcher.emit('all', 'unlink', 'what/what.jpg');
-    watcher.emit('all', 'add', 'what/what2.jpg');
+    client.emit('subscription', 'unlink', 'what/what.jpg');
+    client.emit('subscription', 'add', 'what/what2.jpg');
   }, 200);
 
   return expect(data).resolves.toEqual({
@@ -83,16 +80,14 @@ test('sends a move event through the stream', () => {
 });
 
 test('sends a delete event through the stream', () => {
-  const watcher = new EventEmitter();
-  chokidar.watch = jest.fn(() => watcher);
-
+  const client = new Client();
   const data = createStream('data').pipe(take(2)).toPromise();
 
   // Init.
-  watcher.emit('all', 'add', 'what/what.jpg');
+  client.emit('subscription', 'add', 'what/what.jpg');
   // At somepoint in the future.
   setTimeout(() => {
-    watcher.emit('all', 'unlink', 'what/what.jpg');
+    client.emit('subscription', 'unlink', 'what/what.jpg');
   }, 200);
 
   return expect(data).resolves.toEqual({
