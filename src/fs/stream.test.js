@@ -2,6 +2,7 @@ const { Client } = require('fb-watchman');
 const { take } = require('rxjs/operators');
 const createStream = require('./stream');
 
+// Hoisted to the top of the file.
 jest.mock('fb-watchman', () => {
   const EventEmitter = require('events');
   const mockClient = new EventEmitter();
