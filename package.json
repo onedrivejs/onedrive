@@ -2,6 +2,7 @@
   "dependencies": {
     "commander": "^2.15.1",
     "fb-watchman": "^2.0.0",
+    "immutable": "^3.8.2",
     "jest": "^23.1.0",
     "rxjs": "^6.2.1"
   },
