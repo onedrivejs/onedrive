@@ -6,9 +6,6 @@ const { Map, Set } = require('immutable');
 const client = new Client();
 
 const formatAction = (action, file) => {
-  let type;
-
-  // @TODO split into a seperate function.
   switch (file.type) {
     case 'f':
       type = 'file';
@@ -17,6 +14,8 @@ const formatAction = (action, file) => {
       type = 'folder';
       break;
     default:
+      // @TODO remove types onedrive doesn't support!
+      type = '';
       break;
   }
 
@@ -46,13 +45,13 @@ const stream = (directory) => {
   return fromEvent(client, 'subscription').pipe(
     flatMap((resp) => {
       // Create a map of files by id.
-      const fileActions = resp.files.reduce((map, file) => {
+      const fileActions = resp.files.reduce((actions, file) => {
         const a = [
-          ...map.get(file.ino, []),
+          ...actions.get(file.ino, []),
           file,
         ];
 
-        return map.set(file.ino, a);
+        return actions.set(file.ino, a);
       }, new Map());
 
       return from(fileActions.map((items) => {
@@ -62,7 +61,8 @@ const stream = (directory) => {
         if (items.length === 2) {
           const [first, second] = items;
 
-          if (!first.exists
+          if (
+            !first.exists
             && !first.new
             && second.exists
             && second.new
@@ -76,8 +76,7 @@ const stream = (directory) => {
 
         // Something is wrong.
         if (items.length > 2) {
-          console.dir(items);
-          throw new Error('Unhandled watchman action');
+          throw new Error(`Too many file actions: ${items.length}`);
         }
 
         // Only a single action.

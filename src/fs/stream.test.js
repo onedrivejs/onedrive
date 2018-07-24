@@ -15,13 +15,13 @@ jest.mock('fb-watchman', () => {
   };
 });
 
-test('creates a filesystem stream', () => {
+test('creating a filesystem stream', () => {
   const stream = createStream('data');
 
   expect(stream).toBeDefined();
 });
 
-test('sends an add event through the stream', () => {
+test('add event', () => {
   const client = new Client();
   const stream = createStream('data');
 
@@ -115,8 +115,8 @@ test('sends an add event through the stream', () => {
   ]);
 });
 
-//
-test('sends a change event through the stream', () => {
+
+test('change event', () => {
   const client = new Client();
   const stream = createStream('data');
   const data = stream.pipe(take(1)).toPromise();
@@ -145,7 +145,7 @@ test('sends a change event through the stream', () => {
   );
 });
 
-test('sends a remove event through the stream', () => {
+test('remove event', () => {
   const client = new Client();
   const stream = createStream('data');
   const data = stream.pipe(take(1)).toPromise();
@@ -174,7 +174,7 @@ test('sends a remove event through the stream', () => {
   );
 });
 
-test('sends a move event through the stream', () => {
+test('move event', () => {
   const client = new Client();
   const stream = createStream('data');
   const data = stream.pipe(take(1)).toPromise();
@@ -212,7 +212,7 @@ test('sends a move event through the stream', () => {
   );
 });
 
-test('sends a copy event through the stream', () => {
+test('copy event', () => {
   const client = new Client();
   const stream = createStream('data');
   const data = stream.pipe(take(2)).toPromise();
@@ -253,4 +253,118 @@ test('sends a copy event through the stream', () => {
       from: 'test/test.txt',
     },
   );
+});
+
+test('bogus file type', () => {
+  const client = new Client();
+  const stream = createStream('data');
+  const data = stream.pipe(take(1)).toPromise();
+
+  client.emit('subscription', {
+    files: [
+      {
+        name: 'test/test.txt',
+        ino: 321,
+        'content.sha1hex': 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
+        type: 'l',
+        exists: true,
+        new: false,
+      },
+    ],
+  });
+
+  return expect(data).resolves.toEqual(
+    {
+      action: 'change',
+      id: 321,
+      type: '',
+      name: 'test/test.txt',
+      hash: 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
+    },
+  );
+});
+
+test('two changes to the same file', () => {
+  const client = new Client();
+  const stream = createStream('data');
+  const data = Promise.all([
+    stream.pipe(take(1)).toPromise(),
+    stream.pipe(take(2)).toPromise(),
+  ]);
+
+  client.emit('subscription', {
+    files: [
+      {
+        name: 'test/test.txt',
+        ino: 321,
+        'content.sha1hex': 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
+        type: 'f',
+        exists: true,
+        new: true,
+      },
+      {
+        name: 'test/test.txt',
+        ino: 321,
+        'content.sha1hex': 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
+        type: 'f',
+        exists: true,
+        new: true,
+      },
+    ],
+  });
+
+  return expect(data).resolves.toEqual(
+    {
+      action: 'change',
+      id: 321,
+      type: 'file',
+      name: 'test/test.txt',
+      hash: 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
+    },
+    {
+      action: 'change',
+      id: 321,
+      type: 'file',
+      name: 'test/test.txt',
+      hash: 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
+    },
+  );
+});
+
+test('too many file changes', () => {
+  const client = new Client();
+  const stream = createStream('data');
+  const data = stream.pipe(take(1)).toPromise();
+
+  client.emit('subscription', {
+    files: [
+      {
+        name: 'test/test.txt',
+        ino: 321,
+        'content.sha1hex': 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
+        type: 'f',
+        exists: true,
+        new: false,
+      },
+      {
+        name: 'test/test.txt',
+        ino: 321,
+        'content.sha1hex': 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
+        type: 'f',
+        exists: true,
+        new: false,
+      },
+      {
+        name: 'test/test.txt',
+        ino: 321,
+        'content.sha1hex': 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
+        type: 'f',
+        exists: true,
+        new: false,
+      },
+    ],
+  });
+
+  // @TODO Figure out how to do expect reject or expect throw. 
+  return expect(data).throw;
 });
