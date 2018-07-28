@@ -1,9 +1,6 @@
-const { Client } = require('fb-watchman');
 const { fromEvent, from } = require('rxjs');
 const { flatMap, map, filter } = require('rxjs/operators');
 const { Map, Set } = require('immutable');
-
-const client = new Client();
 
 const formatAction = (action, file) => {
   switch (file.type) {
@@ -29,7 +26,7 @@ const formatAction = (action, file) => {
   };
 };
 
-const stream = (directory) => {
+const stream = (client, directory) => {
   let adding = new Set();
   let hashes = new Map();
 
@@ -54,10 +51,10 @@ const stream = (directory) => {
         return actions.set(file.ino, a);
       }, new Map());
 
-      return from(fileActions.map((items) => {
+      return from(fileActions.reduce((actions, items) => {
         let action;
 
-        // Resolve two actions.
+        // If there are exactly two actions, this may be a file move.
         if (items.length === 2) {
           const [first, second] = items;
 
@@ -67,33 +64,33 @@ const stream = (directory) => {
             && second.exists
             && second.new
           ) {
-            return {
-              ...formatAction('move', second),
-              oldName: first.name,
-            };
+            return [
+              ...actions,
+              {
+                ...formatAction('move', second),
+                oldName: first.name,
+              },
+            ];
           }
         }
 
-        // Something is wrong.
-        if (items.length > 2) {
-          throw new Error(`Too many file actions: ${items.length}`);
-        }
+        return [
+          ...actions,
+          ...items.map((file) => {
+            if (file.exists) {
+              if (file.new) {
+                action = 'add';
+              } else {
+                action = 'change';
+              }
+            } else {
+              action = 'remove';
+            }
 
-        // Only a single action.
-        const [file] = items;
-
-        if (file.exists) {
-          if (file.new) {
-            action = 'add';
-          } else {
-            action = 'change';
-          }
-        } else {
-          action = 'remove';
-        }
-
-        return formatAction(action, file);
-      }).toArray());
+            return formatAction(action, file);
+          }),
+        ];
+      }, []));
     }),
     // Hold the add actions until a hash (from a change) is present.
     map((value) => {
