@@ -1,0 +1,93 @@
+#!/usr/bin/env node
+const program = require('commander');
+const inquirer = require('inquirer');
+const URL = require('url');
+const opn = require('opn');
+const { parse } = require('dotenv');
+const { stringifySync } = require('envfile');
+const util = require('util');
+const fs = require('fs');
+const path = require('path');
+const client = require('../src/onedrive/client');
+
+const { createReadStream } = fs;
+const writeFile = util.promisify(fs.writeFile);
+
+program
+  .option('-n, --no-write', 'do not write the refresh token to .env')
+  .parse(process.argv);
+
+const auth = async () => {
+  const redirectUri = 'https://login.microsoftonline.com/common/oauth2/nativeclient';
+  const scope = 'offline_access files.readwrite';
+
+  const authUrl = client.authorizationCode.authorizeURL({
+    redirect_uri: redirectUri,
+    scope,
+  });
+
+  console.log('Open: ', authUrl);
+  opn(authUrl);
+
+  const { redirectUrl } = await inquirer.prompt([
+    {
+      name: 'redirectUrl',
+      message: 'Redirect URL:',
+      validate: (input) => {
+        try {
+          const url = URL.parse(input, true);
+          return !!url.query.code;
+        } catch (e) {
+          return false;
+        }
+      },
+    },
+  ]);
+
+  const url = URL.parse(redirectUrl, true);
+
+  let refreshToken;
+  try {
+    ({ refresh_token: refreshToken } = await client.authorizationCode.getToken({
+      code: url.query.code,
+      redirect_uri: redirectUri,
+      scope,
+    }));
+  } catch (e) {
+    console.error(e.message);
+    return process.exit(1);
+  }
+
+  if (program.noWrite) {
+    console.log(refreshToken);
+    return process.exit(0);
+  }
+
+  const envPath = path.join(__dirname, '..', '.env');
+
+  let env = {};
+  try {
+    const envFile = createReadStream(envPath);
+    env = parse(envFile);
+  } catch (e) {
+    // Silence is golden.
+  }
+
+  env.ONEDRIVE_REFRESH_TOKEN = refreshToken;
+
+  try {
+    await writeFile(envPath, stringifySync(env), {
+      flag: 'w+',
+    });
+  } catch (e) {
+    console.error(e);
+    return process.exit(e);
+  }
+
+  console.log('Refresh Token written to .env');
+
+  return process.exit(0);
+};
+
+// Enagage
+auth();
