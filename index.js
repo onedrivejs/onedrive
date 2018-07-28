@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const program = require('commander');
 const path = require('path');
+const { Client } = require('fb-watchman');
 const createStream = require('./src/fs/stream');
 
 program
@@ -15,7 +16,7 @@ if (typeof program.args[0] === 'undefined') {
 
 const directory = path.resolve(program.args[0]);
 
-const stream = createStream(directory);
+const stream = createStream(new Client(), directory);
 
 stream.subscribe((data) => {
   console.log(data);

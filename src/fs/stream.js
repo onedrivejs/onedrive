@@ -1,8 +1,11 @@
 const { fromEvent, from } = require('rxjs');
+const { DateTime } = require('luxon');
 const { flatMap, map, filter } = require('rxjs/operators');
 const { Map, Set } = require('immutable');
 
 const formatAction = (action, file) => {
+  let type;
+
   switch (file.type) {
     case 'f':
       type = 'file';
@@ -22,6 +25,7 @@ const formatAction = (action, file) => {
     id: file.ino,
     type,
     name: file.name,
+    modified: file.mtime_ms ? DateTime.fromMillis(file.mtime_ms) : null,
     hash: typeof file['content.sha1hex'] === 'string' ? file['content.sha1hex'] : null,
   };
 };
