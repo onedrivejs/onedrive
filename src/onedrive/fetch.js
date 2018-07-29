@@ -14,7 +14,14 @@ const createFetch = async (refreshToken) => {
       },
       ...init,
     };
-    return fetch(input, options);
+
+    const response = await fetch(input, options);
+
+    if (!response.ok) {
+      throw new Error(response.statusText);
+    }
+
+    return response;
   };
 };
 
