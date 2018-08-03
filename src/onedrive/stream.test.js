@@ -146,12 +146,14 @@ test('remove event', () => {
     parentReference: {
       path: '/drive/root:/test',
     },
-    '@microsoft.graph.downloadUrl': 'https://example.com',
   });
 
   return expect(data).resolves.toEqual({
     action: 'remove',
+    downloadUrl: null,
+    hash: null,
     id: '321',
+    modified: null,
     type: 'file',
     name: 'test/test.jpg',
   });

@@ -4,59 +4,63 @@ const { join } = require('path');
 const { Map } = require('immutable');
 const delta = require('./delta');
 
+const formatAction = (action, file, name, hash = null) => {
+  let type;
+  if ('file' in file) {
+    type = 'file';
+  } else if ('folder' in file) {
+    type = 'folder';
+  } else {
+    throw new Error('Unhandled item type');
+  }
+
+  return {
+    action,
+    id: file.id,
+    type,
+    name,
+    modified: file.lastModifiedDateTime ? DateTime.fromISO(file.lastModifiedDateTime) : null,
+    hash,
+    downloadUrl: file['@microsoft.graph.downloadUrl'] ? file['@microsoft.graph.downloadUrl'] : null,
+  };
+};
+
 const stream = (refreshToken) => {
   let files = new Map();
 
   return delta(refreshToken).pipe(
     map((file) => {
-      let type;
-      if ('file' in file) {
-        type = 'file';
-      } else if ('folder' in file) {
-        type = 'folder';
-      } else {
-        throw new Error('Unhandled item type');
-      }
-
       // Debug
       // return file;
 
       const hash = file.file && file.file.hashes ? file.file.hashes.sha1Hash : null;
-      const name = join(file.parentReference.path, file.name).replace('/drive/root:/', '');
-
-      let action;
-      let oldName;
-      let from;
-
-      const basic = {
-        id: file.id,
-        type,
-        name,
-      };
+      const name = file.parentReference ? join(file.parentReference.path, file.name).replace('/drive/root:/', '') : null;
 
       if ('deleted' in file) {
         files = files.remove(file.id);
-        return {
-          action: 'remove',
-          ...basic,
-        };
+        return formatAction('remove', file, name, hash);
       }
 
       const existing = files.get(file.id);
+      let action;
       if (existing) {
         if (existing.name !== name) {
-          action = 'move';
-          oldName = existing.name;
+          action = {
+            ...formatAction('move', file, name, hash),
+            oldName: existing.name,
+          };
         } else {
-          action = 'change';
+          action = formatAction('change', file, name, hash);
         }
       } else {
         const other = files.find(f => f.hash === hash);
         if (other) {
-          action = 'copy';
-          from = other.name;
+          action = {
+            ...formatAction('copy', file, name, hash),
+            from: other.name,
+          };
         } else {
-          action = 'add';
+          action = formatAction('add', file, name, hash);
         }
       }
 
@@ -65,15 +69,7 @@ const stream = (refreshToken) => {
         hash,
       });
 
-      return {
-        action,
-        ...basic,
-        from,
-        modified: file.lastModifiedDateTime ? DateTime.fromISO(file.lastModifiedDateTime) : null,
-        hash,
-        downloadUrl: file['@microsoft.graph.downloadUrl'] ? file['@microsoft.graph.downloadUrl'] : null,
-        oldName,
-      };
+      return action;
     }),
   );
 };

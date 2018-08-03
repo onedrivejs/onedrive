@@ -19,7 +19,6 @@ const formatAction = (action, file) => {
       break;
   }
 
-  // @TODO Add the lastModifiedDateTime to the action
   return {
     action,
     id: file.ino,
