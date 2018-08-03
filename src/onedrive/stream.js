@@ -4,7 +4,7 @@ const { join } = require('path');
 const { Map } = require('immutable');
 const delta = require('./delta');
 
-const formatAction = (action, file, name, hash = null) => {
+const formatAction = (action, file, name, hash) => {
   let type;
   if ('file' in file) {
     type = 'file';
@@ -33,8 +33,8 @@ const stream = (refreshToken) => {
       // Debug
       // return file;
 
-      const hash = file.file && file.file.hashes ? file.file.hashes.sha1Hash : null;
-      const name = file.parentReference ? join(file.parentReference.path, file.name).replace('/drive/root:/', '') : null;
+      const hash = file.file && file.file.hashes ? file.file.hashes.sha1Hash.toLowerCase() : null;
+      const name = file.parentReference && file.parentReference.path ? join(file.parentReference.path, file.name).replace('/drive/root:/', '') : file.name;
 
       if ('deleted' in file) {
         files = files.remove(file.id);
