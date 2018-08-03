@@ -11,14 +11,16 @@ const stream = refreshToken => (
         type = 'file';
       } else if ('folder' in file) {
         type = 'folder';
+      } else {
+        throw new Error('Unhandled item type');
       }
 
       // Debug
       // return file;
 
-      // @TODO Deal with move/copy/delete.
+      // @TODO Deal with change/move/copy/delete.
       return {
-        action: 'change',
+        action: 'add',
         id: file.id,
         type,
         name: join(file.parentReference.path, file.name).replace('/drive/root:/', ''),
