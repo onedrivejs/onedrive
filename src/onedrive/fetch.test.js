@@ -28,14 +28,3 @@ test('returns a response object', () => {
 
   return expect(response).resolves.toEqual(data);
 });
-
-test('throws an error when response is not ok.', () => {
-  const data = {
-    ok: false,
-    statusText: 'Not OK',
-  };
-  nodeFetch.mockReturnValueOnce(data);
-  const response = createFetch('1234').then(fetch => fetch('https://example.com'));
-
-  return expect(response).rejects.toEqual(new Error('Not OK'));
-});

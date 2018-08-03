@@ -21,11 +21,16 @@ const delta = (refreshToken) => {
     flatMap(url => (
       createFetch(refreshToken)
         .then(fetch => fetch(url))
-        .catch((e) => {
-          console.error(e);
-          deltaLink.next(url);
+        .then((response) => {
+          if (!response.ok) {
+            console.error(response.status, response.statusText, url);
+            return Promise.resolve({
+              '@odata.deltaLink': url,
+            });
+          }
+
+          return response.json();
         })
-        .then(response => response.json())
         .then((data) => {
           if (data['@odata.nextLink']) {
             nextLink.next(data['@odata.nextLink']);
