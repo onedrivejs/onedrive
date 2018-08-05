@@ -1,5 +1,5 @@
 const {
-  concat,
+  merge,
   empty,
   from,
   of,
@@ -8,6 +8,7 @@ const { flatMap, filter } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const { promisify } = require('util');
 const { fromFile: hashFromFile } = require('hasha');
+const promisePipe = require('promisepipe');
 const fs = require('fs');
 const {
   ensureDir,
@@ -18,6 +19,7 @@ const {
 const { join, dirname } = require('path');
 const fetch = require('node-fetch');
 const readdir = require('recursive-readdir');
+const { PassThrough } = require('stream');
 
 const utimes = promisify(fs.utimes);
 const stat = promisify(fs.stat);
@@ -82,8 +84,6 @@ const moveFile = async (directory, name, oldName) => {
   const path = join(directory, name);
   const oldPath = join(directory, oldName);
   try {
-    // @TODO When a copy would override an existing file, move that file to
-    //       the trash first.
     await move(oldPath, path);
     return formatAction('move', 'end', type, name);
   } catch (error) {
@@ -95,8 +95,30 @@ const moveFile = async (directory, name, oldName) => {
       };
     }
 
-    // Some other error we don't know how to deal with.
-    throw error;
+    // Attempt to move the file to the trash first.
+    try {
+      // Copy the existing file to the trash.
+      const trashPath = join(directory, '.trash', name);
+      await ensureDir(dirname(trashPath));
+      await copy(path, trashPath);
+
+      // Allow override this time.
+      await move(oldPath, path, {
+        overwrite: true,
+      });
+      return formatAction('move', 'end', type, name);
+    } catch (e) {
+      // No such file or directory.
+      if (error.code === 'ENOENT') {
+        return {
+          ...formatAction('move', 'error', type, name),
+          error,
+        };
+      }
+
+      // Some other error we don't know how to deal with.
+      throw e;
+    }
   }
 };
 
@@ -106,21 +128,39 @@ const downloadFile = async (directory, name, modified, downloadUrl) => {
   const response = await fetch(downloadUrl);
 
   if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText} ${downloadUrl}`);
+    return {
+      ...formatAction('download', 'error', type, name),
+      error: new Error(`${response.status} ${response.statusText} ${downloadUrl}`),
+    };
   }
 
   try {
     await ensureDir(dirname(path));
-    // @TODO Downloading ontop of an existing file should first move the file
-    //       to the trash.
-    await response.body.pipe(fs.createWriteStream(path));
+    const body = new PassThrough();
+    response.body.pipe(body);
+    await promisePipe(body, fs.createWriteStream(path, {
+      flags: 'wx',
+    }));
     await utimes(path, new Date(), modified.toJSDate());
-    return formatAction('download', 'done', type, name);
+    return formatAction('download', 'end', type, name);
   } catch (error) {
-    return {
-      ...formatAction('download', 'error', type, name),
-      error,
-    };
+    // If the file was going to be overridden.
+    if (error.originalError && error.originalError.code === 'EEXIST') {
+      // Copy the existing file to the trash.
+      const trashPath = join(directory, '.trash', name);
+      await ensureDir(dirname(trashPath));
+      await copy(path, trashPath);
+
+      const body = new PassThrough();
+      response.body.pipe(body);
+      // Allow override this time.
+      await promisePipe(body, fs.createWriteStream(path));
+      await utimes(path, new Date(), modified.toJSDate());
+      return formatAction('download', 'end', type, name);
+    }
+
+    // Some other error we don't know how to deal with.
+    throw error;
   }
 };
 
@@ -152,9 +192,11 @@ const copyFile = async (directory, name, fromName) => {
   const path = join(directory, name);
   const fromPath = join(directory, fromName);
   try {
-    // @TODO When a copy would override an existing file, move that file to
-    //       the trash first.
-    await copy(fromPath, path);
+    await copy(fromPath, path, {
+      overwrite: false,
+      errorOnExist: true,
+      preserveTimestamps: true,
+    });
     return formatAction('copy', 'end', type, name);
   } catch (error) {
     // No such file or directory.
@@ -165,8 +207,30 @@ const copyFile = async (directory, name, fromName) => {
       };
     }
 
-    // Some other error we don't know how to deal with.
-    throw error;
+    // Attempt to move the file to the trash first.
+    try {
+      // Copy the existing file to the trash.
+      const trashPath = join(directory, '.trash', name);
+      await ensureDir(dirname(trashPath));
+      await copy(path, trashPath);
+
+      // Allow override this time.
+      await copy(fromPath, path, {
+        preserveTimestamps: true,
+      });
+      return formatAction('copy', 'end', type, name);
+    } catch (e) {
+      // No such file or directory.
+      if (error.code === 'ENOENT') {
+        return {
+          ...formatAction('copy', 'error', type, name),
+          error,
+        };
+      }
+
+      // Some other error we don't know how to deal with.
+      throw e;
+    }
   }
 };
 
@@ -233,7 +297,7 @@ const resolver = (directory, oneDriveStream) => (
     flatMap((data) => {
       // Empty folders should be added.
       if (data.action === 'add' && data.type === 'folder') {
-        return concat(
+        return merge(
           formatAction('create', 'start', data.type, data.name),
           createFolder(directory, data.name),
         );
@@ -244,7 +308,7 @@ const resolver = (directory, oneDriveStream) => (
         return from(shouldDownloadFile(directory, data.name, data.hash, data.modified)).pipe(
           filter(should => !!should),
           flatMap(() => (
-            concat(
+            merge(
               formatAction('download', 'start', data.type, data.name),
               downloadFile(directory, data.name, data.modified, data.downloadUrl),
             )
@@ -253,7 +317,7 @@ const resolver = (directory, oneDriveStream) => (
       }
 
       if (data.action === 'move' && data.type === 'file') {
-        return concat(
+        return merge(
           formatAction('move', 'start', data.type, data.name),
           moveFile(directory, data.name, data.oldName),
         );
@@ -263,13 +327,13 @@ const resolver = (directory, oneDriveStream) => (
         return from(shouldCopyFile(directory, data.from, data.hash)).pipe(
           flatMap((shouldCopy) => {
             if (shouldCopy) {
-              return concat(
+              return merge(
                 formatAction('copy', 'start', data.type, data.name),
                 copyFile(directory, data.name, data.from),
               );
             }
 
-            return concat(
+            return merge(
               formatAction('download', 'start', data.type, data.name),
               downloadFile(directory, data.name, data.modified, data.downloadUrl),
             );
@@ -278,12 +342,12 @@ const resolver = (directory, oneDriveStream) => (
       }
 
       if (data.action === 'remove' && data.type === 'file') {
-        return concat(
+        return merge(
           formatAction('remove', 'start', data.type, data.name),
           from(removeFile(directory, data.name)).pipe(
             // After the file remove is done, clean the trash.
             flatMap(() => (
-              concat(
+              merge(
                 of({
                   action: 'trash',
                   phase: 'start',
