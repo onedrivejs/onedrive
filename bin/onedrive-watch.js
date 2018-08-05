@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 const { Client } = require('fb-watchman');
 const { merge } = require('rxjs');
 const creatFsStream = require('../src/fs/stream');
-const createFsResolver = require('../src/fs/resolver');
+const createFsResolver = require('../src/fs/resolver/resolver');
 const createOneDriveStream = require('../src/onedrive/stream');
 
 dotenv.load();
