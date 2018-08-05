@@ -58,7 +58,7 @@ const shouldDownloadFile = async (directory, name, hash, modified) => {
     }
 
     const fileStat = await stat(path);
-    const fileModified = DateTime.fromJSDate(fileStat.mtime);
+    const fileModified = DateTime.fromJSDate(fileStat.mtime, { zone: 'local' });
 
     // The file on the file system is newer, skip downloading.
     if (fileModified > modified) {
@@ -82,6 +82,8 @@ const moveFile = async (directory, name, oldName) => {
   const path = join(directory, name);
   const oldPath = join(directory, oldName);
   try {
+    // @TODO When a copy would override an existing file, move that file to
+    //       the trash first.
     await move(oldPath, path);
     return formatAction('move', 'end', type, name);
   } catch (error) {
@@ -109,6 +111,8 @@ const downloadFile = async (directory, name, modified, downloadUrl) => {
 
   try {
     await ensureDir(dirname(path));
+    // @TODO Downloading ontop of an existing file should first move the file
+    //       to the trash.
     await response.body.pipe(fs.createWriteStream(path));
     await utimes(path, new Date(), modified.toJSDate());
     return formatAction('download', 'done', type, name);
@@ -148,6 +152,8 @@ const copyFile = async (directory, name, fromName) => {
   const path = join(directory, name);
   const fromPath = join(directory, fromName);
   try {
+    // @TODO When a copy would override an existing file, move that file to
+    //       the trash first.
     await copy(fromPath, path);
     return formatAction('copy', 'end', type, name);
   } catch (error) {
@@ -170,7 +176,9 @@ const removeFile = async (directory, name) => {
   const trashPath = join(directory, '.trash', name);
   try {
     await ensureDir(dirname(trashPath));
-    await move(path, trashPath);
+    await move(path, trashPath, {
+      overwrite: true,
+    });
     return formatAction('remove', 'end', type, name);
   } catch (error) {
     // No such file or directory.
@@ -188,14 +196,17 @@ const removeFile = async (directory, name) => {
 
 const cleanTrash = async (directory) => {
   const trash = join(directory, '.trash');
-  const threshold = (new DateTime()).minus({ months: 1 });
+  const threshold = DateTime.local().minus({ months: 1 });
   const files = await readdir(trash);
-  const clean = files.filter(async (name) => {
-    const path = join(trash, name);
-    const fileStat = await stat(path);
-    const fileModified = DateTime.fromJSDate(fileStat.mtime);
-    if (fileModified < threshold) {
-      return true;
+  const clean = files.filter(async (path) => {
+    try {
+      const fileStat = await stat(path);
+      const fileModified = DateTime.fromJSDate(fileStat.mtime);
+      if (fileModified < threshold) {
+        return true;
+      }
+    } catch (e) {
+      console.error(e);
     }
 
     return false;
@@ -206,7 +217,7 @@ const cleanTrash = async (directory) => {
       const path = join(trash, name);
       return remove(path);
     } catch (e) {
-      // Silence is golden.
+      console.error(e);
       return Promise.reolve(undefined);
     }
   }));
@@ -269,12 +280,18 @@ const resolver = (directory, oneDriveStream) => (
       if (data.action === 'remove' && data.type === 'file') {
         return concat(
           formatAction('remove', 'start', data.type, data.name),
-          removeFile(directory, data.name),
-          of({
-            action: 'trash',
-            phase: 'start',
-          }),
-          cleanTrash(directory),
+          from(removeFile(directory, data.name)).pipe(
+            // After the file remove is done, clean the trash.
+            flatMap(() => (
+              concat(
+                of({
+                  action: 'trash',
+                  phase: 'start',
+                }),
+                cleanTrash(directory),
+              )
+            )),
+          ),
         );
       }
 
