@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const { Client } = require('fb-watchman');
 const { merge } = require('rxjs');
 const creatFsStream = require('../src/fs/stream');
+const createFsResolver = require('../src/fs/resolver');
 const createOneDriveStream = require('../src/onedrive/stream');
 
 dotenv.load();
@@ -33,8 +34,9 @@ const watch = () => {
   const directory = path.resolve(program.args[0]);
   const fsStream = creatFsStream(new Client(), directory);
   const oneDriveStream = createOneDriveStream(refreshToken);
+  const fsResolver = createFsResolver(directory, oneDriveStream);
 
-  return merge(fsStream, oneDriveStream).subscribe((data) => {
+  return fsResolver.subscribe((data) => {
     console.log(data);
   });
 };

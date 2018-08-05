@@ -30,9 +30,6 @@ const stream = (refreshToken) => {
 
   return delta(refreshToken).pipe(
     map((file) => {
-      // Debug
-      // return file;
-
       const hash = file.file && file.file.hashes ? file.file.hashes.sha1Hash.toLowerCase() : null;
       const name = file.parentReference && file.parentReference.path ? join(file.parentReference.path, file.name).replace('/drive/root:/', '') : file.name;
 
@@ -53,7 +50,7 @@ const stream = (refreshToken) => {
           action = formatAction('change', file, name, hash);
         }
       } else {
-        const other = files.find(f => f.hash === hash);
+        const other = hash ? files.find(f => f.hash === hash) : undefined;
         if (other) {
           action = {
             ...formatAction('copy', file, name, hash),
