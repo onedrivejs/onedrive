@@ -12,10 +12,10 @@ jest.mock('graceful-fs', () => jest.mock('fs'));
 jest.mock('fs-extra');
 jest.mock('recursive-readdir');
 
-const mockReaddir = jest.fn().mockReturnValue([]);
+const mockReaddir = jest.fn().mockResolvedValue([]);
 readdir.mockImplementation(mockReaddir);
 
-const mockStats = jest.fn().mockReturnValue({});
+const mockStats = jest.fn().mockResolvedValue({});
 stat.mockImplementation((path, options, callback) => {
   if (typeof options === 'function') {
     return options(undefined, mockStats());
@@ -34,10 +34,10 @@ test('clean trash', () => {
 });
 
 test('clean trash with new file', () => {
-  mockReaddir.mockReturnValueOnce([
+  mockReaddir.mockResolvedValueOnce([
     '/data/test.txt',
   ]);
-  mockStats.mockReturnValueOnce({
+  mockStats.mockResolvedValueOnce({
     mtime: new Date(),
   });
   const clean = cleanTrash('/data');
@@ -49,10 +49,10 @@ test('clean trash with new file', () => {
 });
 
 test('clean trash with old file', () => {
-  mockReaddir.mockReturnValueOnce([
+  mockReaddir.mockResolvedValueOnce([
     '/data/test.txt',
   ]);
-  mockStats.mockReturnValueOnce({
+  mockStats.mockResolvedValueOnce({
     mtime: new Date('1995-12-17T03:24:00'),
   });
   const clean = cleanTrash('/data');

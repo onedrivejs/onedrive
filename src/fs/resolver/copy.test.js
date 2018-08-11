@@ -14,7 +14,7 @@ test('should copy file', () => {
 
 test('should copy file with identical hash', () => {
   const hash = '1234';
-  hashFromFile.mockReturnValueOnce(hash);
+  hashFromFile.mockResolvedValueOnce(hash);
 
   const result = shouldCopyFile('/data', 'test.txt', hash);
 
@@ -22,7 +22,7 @@ test('should copy file with identical hash', () => {
 });
 
 test('should copy file with non-matching hash', () => {
-  hashFromFile.mockReturnValueOnce('1234');
+  hashFromFile.mockResolvedValueOnce('1234');
 
   const result = shouldCopyFile('/data', 'test.txt', '4321');
 
