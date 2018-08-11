@@ -1,12 +1,28 @@
-const fs = require('fs');
-const { promisify } = require('util');
-const { remove } = require('fs-extra');
+const { stat } = require('fs');
+// const { promisify } = require('util');
+// const { remove } = require('fs-extra');
+const readdir = require('recursive-readdir');
 const cleanTrash = require('./clean');
 
-const writeFile = promisify(fs.writeFile);
-const utimes = promisify(fs.utimes);
+// const writeFile = promisify(fs.writeFile);
+// const utimes = promisify(fs.utimes);
 
 jest.mock('fs');
+jest.mock('graceful-fs', () => jest.mock('fs'));
+jest.mock('fs-extra');
+jest.mock('recursive-readdir');
+
+const mockReaddir = jest.fn().mockReturnValue([]);
+readdir.mockImplementation(mockReaddir);
+
+const mockStats = jest.fn().mockReturnValue({});
+stat.mockImplementation((path, options, callback) => {
+  if (typeof options === 'function') {
+    return options(undefined, mockStats());
+  }
+
+  return callback(undefined, mockStats());
+});
 
 test('clean trash', () => {
   const clean = cleanTrash('/data');
@@ -17,8 +33,13 @@ test('clean trash', () => {
   });
 });
 
-test('clean trash with new file', async () => {
-  await writeFile('/data/.trash/test.txt', 'testing');
+test('clean trash with new file', () => {
+  mockReaddir.mockReturnValueOnce([
+    '/data/test.txt',
+  ]);
+  mockStats.mockReturnValueOnce({
+    mtime: new Date(),
+  });
   const clean = cleanTrash('/data');
 
   return expect(clean).resolves.toEqual({
@@ -27,25 +48,14 @@ test('clean trash with new file', async () => {
   });
 });
 
-test('clean trash with old file', async () => {
-  const path = '/data/.trash/test.txt';
-  await writeFile(path, 'testing');
-  await utimes(path, 100, 100);
-
-  const clean = cleanTrash('/data');
-
-  return expect(clean).resolves.toEqual({
-    action: 'clean',
-    phase: 'end',
+test('clean trash with old file', () => {
+  mockReaddir.mockReturnValueOnce([
+    '/data/test.txt',
+  ]);
+  mockStats.mockReturnValueOnce({
+    mtime: new Date('1995-12-17T03:24:00'),
   });
-});
-
-test('clean trash with stat failure', async () => {
-  const path = '/data/.trash/test2.txt';
-  await writeFile(path, 'testing');
-
   const clean = cleanTrash('/data');
-  remove(path);
 
   return expect(clean).resolves.toEqual({
     action: 'clean',
