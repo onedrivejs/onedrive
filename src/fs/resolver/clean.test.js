@@ -28,7 +28,7 @@ test('clean trash', () => {
   const clean = cleanTrash('/data');
 
   return expect(clean).resolves.toEqual({
-    action: 'clean',
+    action: 'trash',
     phase: 'end',
   });
 });
@@ -43,7 +43,7 @@ test('clean trash with new file', () => {
   const clean = cleanTrash('/data');
 
   return expect(clean).resolves.toEqual({
-    action: 'clean',
+    action: 'trash',
     phase: 'end',
   });
 });
@@ -58,7 +58,7 @@ test('clean trash with old file', () => {
   const clean = cleanTrash('/data');
 
   return expect(clean).resolves.toEqual({
-    action: 'clean',
+    action: 'trash',
     phase: 'end',
   });
 });

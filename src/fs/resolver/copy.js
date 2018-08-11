@@ -45,7 +45,7 @@ const copyFile = async (directory, name, fromName) => {
     // No such file or directory.
     if (error.code === 'ENOENT') {
       return {
-        ...formatAction('copy', 'error', type, name),
+        ...await formatAction('copy', 'error', type, name),
         error,
       };
     }
@@ -65,10 +65,10 @@ const copyFile = async (directory, name, fromName) => {
       return formatAction('copy', 'end', type, name);
     } catch (e) {
       // No such file or directory.
-      if (error.code === 'ENOENT') {
+      if (e.code === 'ENOENT') {
         return {
-          ...formatAction('copy', 'error', type, name),
-          error,
+          ...await formatAction('copy', 'error', type, name),
+          error: e,
         };
       }
 
