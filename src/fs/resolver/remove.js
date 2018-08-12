@@ -19,7 +19,7 @@ const removeFile = async (directory, name) => {
     // No such file or directory.
     if (error.code === 'ENOENT') {
       return {
-        ...formatAction('remove', 'error', type, name),
+        ...await formatAction('remove', 'error', type, name),
         error,
       };
     }
