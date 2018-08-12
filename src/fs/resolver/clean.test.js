@@ -1,11 +1,6 @@
 const { stat } = require('fs');
-// const { promisify } = require('util');
-// const { remove } = require('fs-extra');
 const readdir = require('recursive-readdir');
 const cleanTrash = require('./clean');
-
-// const writeFile = promisify(fs.writeFile);
-// const utimes = promisify(fs.utimes);
 
 jest.mock('fs');
 jest.mock('graceful-fs', () => jest.mock('fs'));

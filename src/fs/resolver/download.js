@@ -49,7 +49,7 @@ const downloadFile = async (directory, name, modified, downloadUrl) => {
 
   if (!response.ok) {
     return {
-      ...formatAction('download', 'error', type, name),
+      ...await formatAction('download', 'error', type, name),
       error: new Error(`${response.status} ${response.statusText} ${downloadUrl}`),
     };
   }
