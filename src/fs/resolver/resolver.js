@@ -1,8 +1,8 @@
 const {
   merge,
-  empty,
   from,
   of,
+  EMPTY,
 } = require('rxjs');
 const { flatMap, filter } = require('rxjs/operators');
 const formatAction = require('./format');
@@ -13,6 +13,7 @@ const moveFile = require('./move');
 const removeFile = require('./remove');
 const cleanTrash = require('./clean');
 
+// @TODO Handle copy/move/remove directories.
 const resolver = (directory, oneDriveStream) => (
   oneDriveStream.pipe(
     flatMap((data) => {
@@ -67,8 +68,9 @@ const resolver = (directory, oneDriveStream) => (
           formatAction('remove', 'start', data.type, data.name),
           from(removeFile(directory, data.name)).pipe(
             // After the file remove is done, clean the trash.
-            flatMap(() => (
+            flatMap(value => (
               merge(
+                of(value),
                 of({
                   action: 'trash',
                   phase: 'start',
@@ -80,7 +82,7 @@ const resolver = (directory, oneDriveStream) => (
         );
       }
 
-      return empty();
+      return EMPTY;
     }),
     filter(item => !!item),
   )
