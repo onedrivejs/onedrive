@@ -18,7 +18,7 @@ const moveFile = async (directory, name, oldName) => {
     // No such file or directory.
     if (error.code === 'ENOENT') {
       return {
-        ...formatAction('move', 'error', type, name),
+        ...await formatAction('move', 'error', type, name),
         error,
       };
     }
@@ -38,10 +38,10 @@ const moveFile = async (directory, name, oldName) => {
       return formatAction('move', 'end', type, name);
     } catch (e) {
       // No such file or directory.
-      if (error.code === 'ENOENT') {
+      if (e.code === 'ENOENT') {
         return {
-          ...formatAction('move', 'error', type, name),
-          error,
+          ...await formatAction('move', 'error', type, name),
+          error: e,
         };
       }
 
