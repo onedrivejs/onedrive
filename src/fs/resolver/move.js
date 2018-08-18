@@ -6,8 +6,7 @@ const {
 } = require('fs-extra');
 const formatAction = require('./format');
 
-const moveFile = async (directory, name, oldName) => {
-  const type = 'file';
+const moveItem = async (directory, type, name, oldName) => {
   const path = join(directory, name);
   const oldPath = join(directory, oldName);
   try {
@@ -51,4 +50,4 @@ const moveFile = async (directory, name, oldName) => {
   }
 };
 
-module.exports = moveFile;
+module.exports = moveItem;

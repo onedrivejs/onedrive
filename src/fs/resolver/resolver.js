@@ -9,11 +9,11 @@ const formatAction = require('./format');
 const createFolder = require('./create');
 const { shouldDownloadFile, downloadFile } = require('./download');
 const { shouldCopyFile, copyFile } = require('./copy');
-const moveFile = require('./move');
+const move = require('./move');
 const removeFile = require('./remove');
 const cleanTrash = require('./clean');
 
-// @TODO Handle copy/move/remove directories.
+// @TODO Handle copy/remove directories.
 const resolver = (directory, oneDriveStream) => (
   oneDriveStream.pipe(
     flatMap((data) => {
@@ -38,10 +38,10 @@ const resolver = (directory, oneDriveStream) => (
         );
       }
 
-      if (data.action === 'move' && data.type === 'file') {
+      if (data.action === 'move') {
         return merge(
           formatAction('move', 'start', data.type, data.name),
-          moveFile(directory, data.name, data.oldName),
+          move(directory, data.type, data.name, data.oldName),
         );
       }
 
