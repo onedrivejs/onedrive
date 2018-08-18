@@ -11,7 +11,7 @@ const {
   filter,
   debounceTime,
 } = require('rxjs/operators');
-const formatAction = require('./format');
+const formatAction = require('../../utils/format-action');
 const createFolder = require('./create');
 const { shouldDownloadFile, downloadFile } = require('./download');
 const { shouldCopyFile, copyFile } = require('./copy');

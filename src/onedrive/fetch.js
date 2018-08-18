@@ -8,11 +8,11 @@ const createFetch = async (refreshToken) => {
 
   return async (input, init = {}) => {
     const options = {
+      ...init,
       headers: {
         Authorization: `Bearer ${accessToken.token.access_token}`,
         ...init.headers,
       },
-      ...init,
     };
 
     return fetch(input, options);

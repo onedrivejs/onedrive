@@ -34,7 +34,8 @@ const stream = (client, directory) => {
   let hashes = new Map();
 
   client.command(['subscribe', directory, 'onedrive', {
-    expression: ['not', ['match', '.*']],
+    // Exclude files and folders that begin with .
+    expression: ['allof', ['match', '**'], ['match', '**', 'wholename']],
     fields: ['name', 'ino', 'content.sha1hex', 'type', 'exists', 'new', 'mtime_ms'],
   }]);
 

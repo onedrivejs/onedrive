@@ -1,6 +1,6 @@
 const { join } = require('path');
 const { ensureDir } = require('fs-extra');
-const formatAction = require('./format');
+const formatAction = require('../../utils/format-action');
 
 const createFolder = async (directory, name) => {
   const path = join(directory, name);

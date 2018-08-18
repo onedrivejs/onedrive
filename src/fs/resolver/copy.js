@@ -4,7 +4,7 @@ const {
   ensureDir,
   copy,
 } = require('fs-extra');
-const formatAction = require('./format');
+const formatAction = require('../../utils/format-action');
 
 const shouldCopyFile = async (directory, fromName, hash) => {
   const fromPath = join(directory, fromName);
@@ -44,10 +44,7 @@ const copyFile = async (directory, name, fromName) => {
   } catch (error) {
     // No such file or directory.
     if (error.code === 'ENOENT') {
-      return {
-        ...await formatAction('copy', 'error', type, name),
-        error,
-      };
+      return formatAction('copy', error, type, name);
     }
 
     // Attempt to move the file to the trash first.
@@ -66,10 +63,7 @@ const copyFile = async (directory, name, fromName) => {
     } catch (e) {
       // No such file or directory.
       if (e.code === 'ENOENT') {
-        return {
-          ...await formatAction('copy', 'error', type, name),
-          error: e,
-        };
+        return formatAction('copy', e, type, name);
       }
 
       // Some other error we don't know how to deal with.

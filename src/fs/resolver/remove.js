@@ -3,7 +3,7 @@ const {
   ensureDir,
   move,
 } = require('fs-extra');
-const formatAction = require('./format');
+const formatAction = require('../../utils/format-action');
 
 const remove = async (directory, type, name) => {
   const path = join(directory, name);
@@ -17,10 +17,7 @@ const remove = async (directory, type, name) => {
   } catch (error) {
     // No such file or directory.
     if (error.code === 'ENOENT') {
-      return {
-        ...await formatAction('remove', 'error', type, name),
-        error,
-      };
+      return formatAction('remove', error, type, name);
     }
 
     // Some other error we don't know how to deal with.

@@ -4,7 +4,7 @@ const {
   move,
   copy,
 } = require('fs-extra');
-const formatAction = require('./format');
+const formatAction = require('../../utils/format-action');
 
 const moveItem = async (directory, type, name, oldName) => {
   const path = join(directory, name);
@@ -16,10 +16,7 @@ const moveItem = async (directory, type, name, oldName) => {
   } catch (error) {
     // No such file or directory.
     if (error.code === 'ENOENT') {
-      return {
-        ...await formatAction('move', 'error', type, name),
-        error,
-      };
+      return formatAction('move', error, type, name);
     }
 
     // Attempt to move the file to the trash first.
@@ -38,10 +35,7 @@ const moveItem = async (directory, type, name, oldName) => {
     } catch (e) {
       // No such file or directory.
       if (e.code === 'ENOENT') {
-        return {
-          ...await formatAction('move', 'error', type, name),
-          error: e,
-        };
+        return formatAction('move', e, type, name);
       }
 
       // Some other error we don't know how to deal with.

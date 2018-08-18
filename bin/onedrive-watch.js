@@ -7,6 +7,7 @@ const { merge } = require('rxjs');
 const creatFsStream = require('../src/fs/stream');
 const createFsResolver = require('../src/fs/resolver/resolver');
 const createOneDriveStream = require('../src/onedrive/stream');
+const createOneDriveResolver = require('../src/onedrive/resolver/resolver');
 
 dotenv.load();
 
@@ -35,9 +36,18 @@ const watch = () => {
   const fsStream = creatFsStream(new Client(), directory);
   const oneDriveStream = createOneDriveStream(refreshToken);
   const fsResolver = createFsResolver(directory, oneDriveStream);
+  const oneDriveResolver = createOneDriveResolver(refreshToken, fsStream);
 
-  return fsResolver.subscribe((data) => {
-    console.log(data);
+  // fsStream.subscribe((data) => {
+  //   console.log("FILESYSTEM", data);
+  // });
+
+  fsResolver.subscribe((data) => {
+    console.log("FILESYSTEM", data);
+  });
+
+  oneDriveResolver.subscribe((data) => {
+    console.log("ONEDRIVE", data);
   });
 };
 
