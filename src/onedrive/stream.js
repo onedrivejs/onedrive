@@ -31,14 +31,20 @@ const stream = (refreshToken) => {
   return delta(refreshToken).pipe(
     map((file) => {
       const hash = file.file && file.file.hashes ? file.file.hashes.sha1Hash.toLowerCase() : null;
-      const name = file.parentReference && file.parentReference.path ? join(file.parentReference.path, file.name).replace('/drive/root:/', '') : file.name;
+      const existing = files.get(file.id);
+      let { name } = file;
+      // Use the name from the parent if it exists.
+      if (file.parentReference && file.parentReference.path) {
+        name = join(file.parentReference.path, file.name).replace('/drive/root:/', '');
+      } else if (existing) {
+        ({ name } = existing);
+      }
 
       if ('deleted' in file) {
         files = files.remove(file.id);
         return formatAction('remove', file, name, hash);
       }
 
-      const existing = files.get(file.id);
       let action;
       if (existing) {
         if (existing.name !== name) {

@@ -1,5 +1,5 @@
 const { move } = require('fs-extra');
-const removeFile = require('./remove');
+const remove = require('./remove');
 
 jest.mock('fs');
 jest.mock('graceful-fs', () => jest.mock('fs'));
@@ -7,37 +7,38 @@ jest.mock('fs-extra');
 
 test('remove file', () => {
   const name = 'test.txt';
-  const result = removeFile('/data', name);
+  const type = 'file';
+  const result = remove('/data', type, name);
 
   return expect(result).resolves.toEqual({
     action: 'remove',
     phase: 'end',
-    type: 'file',
+    type,
     name,
   });
 });
 
 test('remove file that no longer exists', () => {
   const name = 'test.txt';
+  const type = 'file';
   const error = new Error();
   error.code = 'ENOENT';
   move.mockRejectedValueOnce(error);
-  const result = removeFile('/data', name);
+  const result = remove('/data', type, name);
 
   return expect(result).resolves.toEqual({
     action: 'remove',
     phase: 'error',
-    type: 'file',
+    type,
     name,
     error,
   });
 });
 
 test('remove file that fails for some reason', () => {
-  const name = 'test.txt';
   const error = new Error();
   move.mockRejectedValueOnce(error);
-  const result = removeFile('/data', name);
+  const result = remove('/data', 'file', 'test.txt');
 
   return expect(result).rejects.toEqual(error);
 });

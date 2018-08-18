@@ -5,7 +5,7 @@ const createFolder = require('./create');
 const move = require('./move');
 const { shouldDownloadFile, downloadFile } = require('./download');
 const { shouldCopyFile, copyFile } = require('./copy');
-const removeFile = require('./remove');
+const remove = require('./remove');
 const cleanTrash = require('./clean');
 const resolver = require('./resolver');
 
@@ -22,7 +22,7 @@ downloadFile.mockImplementation((directory, name) => formatAction('download', 'e
 move.mockImplementation((directory, type, name) => formatAction('move', 'end', type, name));
 shouldCopyFile.mockResolvedValue(true);
 copyFile.mockImplementation((directory, name) => formatAction('copy', 'end', 'file', name));
-removeFile.mockImplementation((directory, name) => formatAction('remove', 'end', 'file', name));
+remove.mockImplementation((directory, type, name) => formatAction('remove', 'end', type, name));
 cleanTrash.mockImplementation(() => formatAction('trash', 'end'));
 
 

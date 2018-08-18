@@ -19,11 +19,12 @@ const cleanTrash = async (directory) => {
       if (fileModified < threshold) {
         return remove(path);
       }
+
+      return undefined;
     } catch (e) {
       // @TODO use some sort of logger?
+      return undefined;
     }
-
-    return undefined;
   }));
 
   return {

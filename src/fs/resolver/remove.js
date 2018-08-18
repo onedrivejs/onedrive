@@ -5,8 +5,7 @@ const {
 } = require('fs-extra');
 const formatAction = require('./format');
 
-const removeFile = async (directory, name) => {
-  const type = 'file';
+const remove = async (directory, type, name) => {
   const path = join(directory, name);
   const trashPath = join(directory, '.trash', name);
   try {
@@ -29,4 +28,4 @@ const removeFile = async (directory, name) => {
   }
 };
 
-module.exports = removeFile;
+module.exports = remove;

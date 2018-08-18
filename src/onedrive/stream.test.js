@@ -159,6 +159,41 @@ test('remove event', () => {
   });
 });
 
+test('remove event with non-existant parent', () => {
+  const subject = new Subject();
+  delta.mockReturnValue(subject);
+  const stream = createStream('1234');
+
+  const data = stream.pipe(take(2)).toPromise();
+
+  subject.next({
+    id: '321',
+    name: 'test.jpg',
+    file: {
+      hash: '1234',
+    },
+    parentReference: {
+      path: '/drive/root:/test',
+    },
+  });
+  subject.next({
+    id: '321',
+    name: 'test.jpg',
+    file: {},
+    deleted: {},
+  });
+
+  return expect(data).resolves.toEqual({
+    action: 'remove',
+    downloadUrl: null,
+    hash: null,
+    id: '321',
+    modified: null,
+    type: 'file',
+    name: 'test/test.jpg',
+  });
+});
+
 test('move event', () => {
   const subject = new Subject();
   delta.mockReturnValue(subject);

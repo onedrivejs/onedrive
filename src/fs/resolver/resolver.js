@@ -10,10 +10,10 @@ const createFolder = require('./create');
 const { shouldDownloadFile, downloadFile } = require('./download');
 const { shouldCopyFile, copyFile } = require('./copy');
 const move = require('./move');
-const removeFile = require('./remove');
+const remove = require('./remove');
 const cleanTrash = require('./clean');
 
-// @TODO Handle copy/remove directories.
+// @TODO Handle remove directories.
 const resolver = (directory, oneDriveStream) => (
   oneDriveStream.pipe(
     flatMap((data) => {
@@ -38,6 +38,7 @@ const resolver = (directory, oneDriveStream) => (
         );
       }
 
+      // Anything can be moved.
       if (data.action === 'move') {
         return merge(
           formatAction('move', 'start', data.type, data.name),
@@ -45,6 +46,9 @@ const resolver = (directory, oneDriveStream) => (
         );
       }
 
+      // If a directory is copied, all of the files in that directory are copied
+      // as well. We'll skip the folder copy and wait for each file to be
+      // copied.
       if (data.action === 'copy' && data.type === 'file') {
         return from(shouldCopyFile(directory, data.from, data.hash)).pipe(
           flatMap((shouldCopy) => {
@@ -63,10 +67,12 @@ const resolver = (directory, oneDriveStream) => (
         );
       }
 
-      if (data.action === 'remove' && data.type === 'file') {
+      // Anything can be removed, but it may no longer exist if the parent
+      // was removed.
+      if (data.action === 'remove') {
         return merge(
           formatAction('remove', 'start', data.type, data.name),
-          from(removeFile(directory, data.name)).pipe(
+          from(remove(directory, data.type, data.name)).pipe(
             // After the file remove is done, clean the trash.
             flatMap(value => (
               merge(

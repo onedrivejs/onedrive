@@ -57,3 +57,16 @@ test('clean trash with old file', () => {
     phase: 'end',
   });
 });
+
+test('clean trash with error file', () => {
+  mockReaddir.mockResolvedValueOnce([
+    '/data/test.txt',
+  ]);
+  mockStats.mockRejectedValueOnce(new Error());
+  const clean = cleanTrash('/data');
+
+  return expect(clean).resolves.toEqual({
+    action: 'trash',
+    phase: 'end',
+  });
+});
