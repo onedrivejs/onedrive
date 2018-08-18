@@ -24,6 +24,7 @@ const createFolder = async (refreshToken, name) => {
     });
 
     const data = await response.json(); // eslint-disable-line no-await-in-loop
+
     if (!response.ok) {
       const error = new Error(`${response.status} ${response.statusText} ${url}`);
       error.data = data;
