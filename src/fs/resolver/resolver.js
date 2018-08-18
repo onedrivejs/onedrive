@@ -3,8 +3,14 @@ const {
   from,
   of,
   EMPTY,
+  Subject,
 } = require('rxjs');
-const { flatMap, filter } = require('rxjs/operators');
+const {
+  flatMap,
+  map,
+  filter,
+  debounceTime,
+} = require('rxjs/operators');
 const formatAction = require('./format');
 const createFolder = require('./create');
 const { shouldDownloadFile, downloadFile } = require('./download');
@@ -13,9 +19,21 @@ const move = require('./move');
 const remove = require('./remove');
 const cleanTrash = require('./clean');
 
-// @TODO Handle remove directories.
-const resolver = (directory, oneDriveStream) => (
-  oneDriveStream.pipe(
+const resolver = (directory, oneDriveStream) => {
+  // The trash does not need to be cleaned all the time. Slow it down with a
+  // debounce.
+  const clean = (new Subject()).pipe(
+    debounceTime(1000),
+    flatMap(() => merge(
+      of({
+        action: 'trash',
+        phase: 'start',
+      }),
+      cleanTrash(directory),
+    )),
+  );
+
+  const resolved = oneDriveStream.pipe(
     flatMap((data) => {
       // Empty folders should be added.
       if (data.action === 'add' && data.type === 'folder') {
@@ -73,17 +91,11 @@ const resolver = (directory, oneDriveStream) => (
         return merge(
           formatAction('remove', 'start', data.type, data.name),
           from(remove(directory, data.type, data.name)).pipe(
-            // After the file remove is done, clean the trash.
-            flatMap(value => (
-              merge(
-                of(value),
-                of({
-                  action: 'trash',
-                  phase: 'start',
-                }),
-                cleanTrash(directory),
-              )
-            )),
+            map((value) => {
+              // After the file remove is done, clean the trash.
+              clean.next(value);
+              return value;
+            }),
           ),
         );
       }
@@ -91,7 +103,9 @@ const resolver = (directory, oneDriveStream) => (
       return EMPTY;
     }),
     filter(item => !!item),
-  )
-);
+  );
+
+  return merge(resolved, clean);
+};
 
 module.exports = resolver;
