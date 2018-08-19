@@ -3,7 +3,6 @@ const program = require('commander');
 const path = require('path');
 const dotenv = require('dotenv');
 const { Client } = require('fb-watchman');
-const { merge } = require('rxjs');
 const creatFsStream = require('../src/fs/stream');
 const fsResolver = require('../src/fs/resolver/resolver');
 const createOneDriveStream = require('../src/onedrive/stream');
