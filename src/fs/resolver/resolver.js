@@ -38,10 +38,7 @@ const resolver = (directory) => {
       flatMap((data) => {
         // Empty folders should be added.
         if (data.action === 'add' && data.type === 'folder') {
-          return merge(
-            formatAction('create', 'start', data.type, data.name),
-            createFolder(directory, data.name),
-          );
+          return createFolder(directory, data.name);
         }
 
         // Download files that have been added or changed.

@@ -1,4 +1,4 @@
-const { Subject } = require('rxjs');
+const { Subject, from } = require('rxjs');
 const { take } = require('rxjs/operators');
 const formatAction = require('../../utils/format-action');
 const createFolder = require('./create');
@@ -16,7 +16,10 @@ jest.mock('./move');
 jest.mock('./remove');
 jest.mock('./clean');
 
-createFolder.mockImplementation((directory, name) => formatAction('create', 'end', 'folder', name));
+createFolder.mockImplementation((directory, name) => from([
+  formatAction('create', 'start', 'folder', name),
+  formatAction('create', 'end', 'folder', name),
+]));
 shouldDownloadFile.mockResolvedValue(true);
 downloadFile.mockImplementation((directory, name) => formatAction('download', 'end', 'file', name));
 move.mockImplementation((directory, type, name) => formatAction('move', 'end', type, name));
