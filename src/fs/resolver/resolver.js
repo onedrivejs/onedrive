@@ -107,7 +107,7 @@ const resolver = (directory) => {
     );
 
     return merge(resolved, clean);
-  }
+  };
 };
 
 module.exports = resolver;
