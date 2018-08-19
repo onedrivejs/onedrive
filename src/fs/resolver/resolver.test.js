@@ -28,7 +28,7 @@ cleanTrash.mockImplementation(() => formatAction('trash', 'end'));
 
 test('resolver add folder', () => {
   const oneDriveStream = new Subject();
-  const fsResolver = resolver('/data', oneDriveStream);
+  const fsResolver = resolver('/data')(oneDriveStream);
   const result = Promise.all([
     fsResolver.pipe(take(1)).toPromise(),
     fsResolver.pipe(take(2)).toPromise(),
@@ -63,7 +63,7 @@ test('resolver add folder', () => {
 
 test('resolver add file', () => {
   const oneDriveStream = new Subject();
-  const fsResolver = resolver('/data', oneDriveStream);
+  const fsResolver = resolver('/data')(oneDriveStream);
   const result = Promise.all([
     fsResolver.pipe(take(1)).toPromise(),
     fsResolver.pipe(take(2)).toPromise(),
@@ -94,7 +94,7 @@ test('resolver add file', () => {
 
 test('resolver move file', () => {
   const oneDriveStream = new Subject();
-  const fsResolver = resolver('/data', oneDriveStream);
+  const fsResolver = resolver('/data')(oneDriveStream);
   const result = Promise.all([
     fsResolver.pipe(take(1)).toPromise(),
     fsResolver.pipe(take(2)).toPromise(),
@@ -122,7 +122,7 @@ test('resolver move file', () => {
 
 test('resolver copy file', () => {
   const oneDriveStream = new Subject();
-  const fsResolver = resolver('/data', oneDriveStream);
+  const fsResolver = resolver('/data')(oneDriveStream);
   const result = Promise.all([
     fsResolver.pipe(take(1)).toPromise(),
     fsResolver.pipe(take(2)).toPromise(),
@@ -153,7 +153,7 @@ test('resolver copy file download', () => {
   shouldCopyFile.mockResolvedValueOnce(false);
   shouldCopyFile.mockResolvedValueOnce(false);
   const oneDriveStream = new Subject();
-  const fsResolver = resolver('/data', oneDriveStream);
+  const fsResolver = resolver('/data')(oneDriveStream);
   const result = Promise.all([
     fsResolver.pipe(take(1)).toPromise(),
     fsResolver.pipe(take(2)).toPromise(),
@@ -184,7 +184,7 @@ test('resolver copy file download', () => {
 
 test('resolver remove file', () => {
   const oneDriveStream = new Subject();
-  const fsResolver = resolver('/data', oneDriveStream);
+  const fsResolver = resolver('/data')(oneDriveStream);
   const result = Promise.all([
     fsResolver.pipe(take(1)).toPromise(),
     fsResolver.pipe(take(2)).toPromise(),

@@ -5,9 +5,9 @@ const dotenv = require('dotenv');
 const { Client } = require('fb-watchman');
 const { merge } = require('rxjs');
 const creatFsStream = require('../src/fs/stream');
-const createFsResolver = require('../src/fs/resolver/resolver');
+const fsResolver = require('../src/fs/resolver/resolver');
 const createOneDriveStream = require('../src/onedrive/stream');
-const createOneDriveResolver = require('../src/onedrive/resolver/resolver');
+const oneDriveResolver = require('../src/onedrive/resolver/resolver');
 
 dotenv.load();
 
@@ -33,21 +33,17 @@ const watch = () => {
   }
 
   const directory = path.resolve(program.args[0]);
-  const fsStream = creatFsStream(new Client(), directory);
-  const oneDriveStream = createOneDriveStream(refreshToken);
-  const fsResolver = createFsResolver(directory, oneDriveStream);
-  const oneDriveResolver = createOneDriveResolver(refreshToken, fsStream);
 
-  // fsStream.subscribe((data) => {
-  //   console.log("FILESYSTEM", data);
-  // });
-
-  fsResolver.subscribe((data) => {
-    console.log("FILESYSTEM", data);
+  createOneDriveStream(refreshToken).pipe(
+    fsResolver(directory),
+  ).subscribe((data) => {
+    console.log('FILESYSTEM', data);
   });
 
-  oneDriveResolver.subscribe((data) => {
-    console.log("ONEDRIVE", data);
+  creatFsStream(new Client(), directory).pipe(
+    oneDriveResolver(refreshToken),
+  ).subscribe((data) => {
+    console.log('ONEDRIVE', data);
   });
 };
 
