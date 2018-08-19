@@ -3,7 +3,7 @@ const { take } = require('rxjs/operators');
 const formatAction = require('../../utils/format-action');
 const createFolder = require('./create');
 const move = require('./move');
-const { shouldDownloadFile, downloadFile } = require('./download');
+const downloadFile= require('./download');
 const { shouldCopyFile, copyFile } = require('./copy');
 const remove = require('./remove');
 const cleanTrash = require('./clean');
@@ -20,8 +20,10 @@ createFolder.mockImplementation((directory, name) => from([
   formatAction('create', 'start', 'folder', name),
   formatAction('create', 'end', 'folder', name),
 ]));
-shouldDownloadFile.mockResolvedValue(true);
-downloadFile.mockImplementation((directory, name) => formatAction('download', 'end', 'file', name));
+downloadFile.mockImplementation((directory, name) => from([
+  formatAction('download', 'start', 'file', name),
+  formatAction('download', 'end', 'file', name),
+]));
 move.mockImplementation((directory, type, name) => formatAction('move', 'end', type, name));
 shouldCopyFile.mockResolvedValue(true);
 copyFile.mockImplementation((directory, name) => formatAction('copy', 'end', 'file', name));

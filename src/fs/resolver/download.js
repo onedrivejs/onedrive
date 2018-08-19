@@ -1,4 +1,6 @@
 const { join, dirname } = require('path');
+const { from, merge, EMPTY } = require('rxjs');
+const { flatMap } = require('rxjs/operators');
 const { fromFile: hashFromFile } = require('hasha');
 const { ensureDir, copy } = require('fs-extra');
 const fs = require('fs');
@@ -42,46 +44,57 @@ const shouldDownloadFile = async (directory, name, hash, modified) => {
   return true;
 };
 
-const downloadFile = async (directory, name, modified, downloadUrl) => {
+const downloadFile = (directory, name, hash, modified, downloadUrl) => {
   const type = 'file';
   const path = join(directory, name);
-  const response = await fetch(downloadUrl);
 
-  if (!response.ok) {
-    return formatAction('download', new Error(`${response.status} ${response.statusText} ${downloadUrl}`), type, name);
-  }
+  return from(shouldDownloadFile(directory, name, hash, modified)).pipe(
+    flatMap((should) => {
+      if (!should) {
+        return EMPTY;
+      }
 
-  try {
-    await ensureDir(dirname(path));
-    const body = new PassThrough();
-    response.body.pipe(body);
-    await promisePipe(body, fs.createWriteStream(path, {
-      flags: 'wx',
-    }));
-    await utimes(path, new Date(), modified.toJSDate());
-    return formatAction('download', 'end', type, name);
-  } catch (error) {
-    // If the file was going to be overridden.
-    if (error.originalError && error.originalError.code === 'EEXIST') {
-      // Copy the existing file to the trash.
-      const trashPath = join(directory, '.trash', name);
-      await ensureDir(dirname(trashPath));
-      await copy(path, trashPath);
+      return merge(
+        formatAction('download', 'start', type, name),
+        (async () => {
+          const response = await fetch(downloadUrl);
 
-      const body = new PassThrough();
-      response.body.pipe(body);
-      // Allow override this time.
-      await promisePipe(body, fs.createWriteStream(path));
-      await utimes(path, new Date(), modified.toJSDate());
-      return formatAction('download', 'end', type, name);
-    }
+          if (!response.ok) {
+            return formatAction('download', new Error(`${response.status} ${response.statusText} ${downloadUrl}`), type, name);
+          }
 
-    // Some other error we don't know how to deal with.
-    throw error;
-  }
+          try {
+            await ensureDir(dirname(path));
+            const body = new PassThrough();
+            response.body.pipe(body);
+            await promisePipe(body, fs.createWriteStream(path, {
+              flags: 'wx',
+            }));
+            await utimes(path, new Date(), modified.toJSDate());
+            return formatAction('download', 'end', type, name);
+          } catch (error) {
+            // If the file was going to be overridden.
+            if (error.originalError && error.originalError.code === 'EEXIST') {
+              // Copy the existing file to the trash.
+              const trashPath = join(directory, '.trash', name);
+              await ensureDir(dirname(trashPath));
+              await copy(path, trashPath);
+
+              const body = new PassThrough();
+              response.body.pipe(body);
+              // Allow override this time.
+              await promisePipe(body, fs.createWriteStream(path));
+              await utimes(path, new Date(), modified.toJSDate());
+              return formatAction('download', 'end', type, name);
+            }
+
+            // Some other error we don't know how to deal with.
+            throw error;
+          }
+        })(),
+      );
+    }),
+  );
 };
 
-module.exports = {
-  shouldDownloadFile,
-  downloadFile,
-};
+module.exports = downloadFile;

@@ -1,4 +1,3 @@
-const { take } = require('rxjs/operators');
 const { ensureDir } = require('fs-extra');
 const createFolder = require('./create');
 
@@ -8,7 +7,7 @@ ensureDir.mockResolvedValue(true);
 
 test('creates a folder', () => {
   const name = 'test';
-  const result = createFolder('/data', name).pipe(take(2)).toPromise();
+  const result = createFolder('/data', name).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'create',

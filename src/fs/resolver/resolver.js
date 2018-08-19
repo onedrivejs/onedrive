@@ -13,7 +13,7 @@ const {
 } = require('rxjs/operators');
 const formatAction = require('../../utils/format-action');
 const createFolder = require('./create');
-const { shouldDownloadFile, downloadFile } = require('./download');
+const downloadFile = require('./download');
 const { shouldCopyFile, copyFile } = require('./copy');
 const move = require('./move');
 const remove = require('./remove');
@@ -43,15 +43,7 @@ const resolver = (directory) => {
 
         // Download files that have been added or changed.
         if (['add', 'change'].includes(data.action) && data.type === 'file') {
-          return from(shouldDownloadFile(directory, data.name, data.hash, data.modified)).pipe(
-            filter(should => !!should),
-            flatMap(() => (
-              merge(
-                formatAction('download', 'start', data.type, data.name),
-                downloadFile(directory, data.name, data.modified, data.downloadUrl),
-              )
-            )),
-          );
+          return downloadFile(directory, data.name, data.hash, data.modified, data.downloadUrl);
         }
 
         // Anything can be moved.
