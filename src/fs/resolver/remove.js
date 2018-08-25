@@ -4,7 +4,7 @@ const {
   ensureDir,
   move,
 } = require('fs-extra');
-const formatAction = require('../../utils/format-action');
+const { formatAction } = require('../../utils/format-action');
 
 const remove = (directory, type, name) => {
   const path = join(directory, name);

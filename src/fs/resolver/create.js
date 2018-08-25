@@ -1,7 +1,7 @@
 const { merge } = require('rxjs');
 const { join } = require('path');
 const { ensureDir } = require('fs-extra');
-const formatAction = require('../../utils/format-action');
+const { formatAction } = require('../../utils/format-action');
 
 const createFolder = (directory, name) => {
   const type = 'folder';

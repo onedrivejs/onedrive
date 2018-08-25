@@ -1,9 +1,9 @@
 const { EMPTY } = require('rxjs');
 const { flatMap } = require('rxjs/operators');
 const createFolder = require('./create');
-// const { shouldUploadFile, uploadFile } = require('./upload');
+const { uploadFile } = require('./upload');
 
-const resolver = refreshToken => (
+const resolver = (directory, refreshToken) => (
   fsStream => (
     fsStream.pipe(
       flatMap((data) => {
@@ -12,17 +12,16 @@ const resolver = refreshToken => (
         }
 
         // Upload files that have been added or changed.
-        // if (['add', 'change'].includes(data.action) && data.type === 'file') {
-        //   return from(shouldUploadFile(refreshToken, data.name, data.hash, data.modified)).pipe(
-        //     filter(should => !!should),
-        //     flatMap(() => (
-        //       merge(
-        //         formatAction('upload', 'start', data.type, data.name),
-        //         uploadFile(refreshToken, data.name, data.modified, data.downloadUrl),
-        //       )
-        //     )),
-        //   );
-        // }
+        if (data.type === 'file' && ['add', 'change'].includes(data.action)) {
+          return uploadFile(
+            directory,
+            refreshToken,
+            data.name,
+            data.hash,
+            data.modified,
+            data.size,
+          );
+        }
 
         return EMPTY;
       }),

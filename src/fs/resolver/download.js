@@ -9,7 +9,7 @@ const { promisify } = require('util');
 const promisePipe = require('promisepipe');
 const fetch = require('node-fetch');
 const { PassThrough } = require('stream');
-const formatAction = require('../../utils/format-action');
+const { formatAction } = require('../../utils/format-action');
 
 const stat = promisify(fs.stat);
 const utimes = promisify(fs.utimes);

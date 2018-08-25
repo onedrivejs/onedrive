@@ -25,6 +25,7 @@ const formatAction = (action, file) => {
     type,
     name: file.name,
     modified: file.mtime_ms ? DateTime.fromMillis(file.mtime_ms) : null,
+    size: file.size,
     hash: typeof file['content.sha1hex'] === 'string' ? file['content.sha1hex'] : null,
   };
 };
@@ -36,7 +37,7 @@ const stream = (client, directory) => {
   client.command(['subscribe', directory, 'onedrive', {
     // Exclude files and folders that begin with .
     expression: ['allof', ['match', '**'], ['match', '**', 'wholename']],
-    fields: ['name', 'ino', 'content.sha1hex', 'type', 'exists', 'new', 'mtime_ms'],
+    fields: ['name', 'ino', 'content.sha1hex', 'type', 'exists', 'new', 'mtime_ms', 'size'],
   }]);
 
   // Debug

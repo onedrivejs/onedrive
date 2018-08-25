@@ -5,7 +5,7 @@ const {
   move,
   copy,
 } = require('fs-extra');
-const formatAction = require('../../utils/format-action');
+const { formatAction } = require('../../utils/format-action');
 
 const moveItem = (directory, type, name, oldName) => {
   const path = join(directory, name);

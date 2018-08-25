@@ -40,7 +40,7 @@ const watch = () => {
   });
 
   creatFsStream(new Client(), directory).pipe(
-    oneDriveResolver(refreshToken),
+    oneDriveResolver(directory, refreshToken),
   ).subscribe((data) => {
     console.log('ONEDRIVE', data);
   });

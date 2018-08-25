@@ -5,7 +5,7 @@ const {
   ensureDir,
   copy,
 } = require('fs-extra');
-const formatAction = require('../../utils/format-action');
+const { formatAction } = require('../../utils/format-action');
 
 const shouldCopyFile = async (directory, fromName, hash) => {
   const fromPath = join(directory, fromName);

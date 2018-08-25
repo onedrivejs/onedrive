@@ -1,6 +1,6 @@
 const { Subject, from } = require('rxjs');
 const { take } = require('rxjs/operators');
-const formatAction = require('../../utils/format-action');
+const { formatAction } = require('../../utils/format-action');
 const createFolder = require('./create');
 const resolver = require('./resolver');
 

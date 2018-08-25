@@ -1,6 +1,4 @@
-// This function is unnecessarily async so it doesn't have to be wrapped in
-// Observable.of() everywhere.
-const formatAction = async (action, phase, type, name) => {
+const formatActionSync = (action, phase, type, name, chunk) => {
   if (phase instanceof Error) {
     return {
       action,
@@ -8,6 +6,16 @@ const formatAction = async (action, phase, type, name) => {
       type,
       name,
       error: phase,
+    };
+  }
+
+  if (chunk) {
+    return {
+      action,
+      phase,
+      type,
+      name,
+      chunk,
     };
   }
 
@@ -19,4 +27,13 @@ const formatAction = async (action, phase, type, name) => {
   };
 };
 
-module.exports = formatAction;
+// This function is unnecessarily async so it doesn't have to be wrapped in
+// Observable.of() everywhere.
+const formatAction = async (action, phase, type, name) => (
+  formatActionSync(action, phase, type, name)
+);
+
+module.exports = {
+  formatAction,
+  formatActionSync,
+};
