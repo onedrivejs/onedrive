@@ -1,7 +1,6 @@
 const {
   merge,
   from,
-  of,
   EMPTY,
   Subject,
 } = require('rxjs');
@@ -11,7 +10,6 @@ const {
   filter,
   debounceTime,
 } = require('rxjs/operators');
-const formatAction = require('../../utils/format-action');
 const createFolder = require('./create');
 const downloadFile = require('./download');
 const { shouldCopyFile, copyFile } = require('./copy');

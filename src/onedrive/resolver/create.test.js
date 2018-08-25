@@ -22,7 +22,7 @@ test('creates a folder in the root', () => {
   createFetch.mockResolvedValue(fetch);
 
   const name = 'test';
-  const result = createFolder('abcd', name);
+  const result = createFolder('abcd', name).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'create',
@@ -48,7 +48,7 @@ test('creates a folder in the root failure', () => {
   createFetch.mockResolvedValue(fetch);
 
   const name = 'test';
-  const result = createFolder('abcd', name);
+  const result = createFolder('abcd', name).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'create',
