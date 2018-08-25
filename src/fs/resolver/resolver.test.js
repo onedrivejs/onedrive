@@ -37,7 +37,10 @@ remove.mockImplementation((directory, type, name) => from([
   formatAction('remove', 'start', type, name),
   formatAction('remove', 'end', type, name),
 ]));
-cleanTrash.mockImplementation(() => formatAction('trash', 'end'));
+cleanTrash.mockImplementation(() => from([
+  formatAction('trash', 'start'),
+  formatAction('trash', 'end'),
+]));
 
 
 test('resolver add folder', () => {

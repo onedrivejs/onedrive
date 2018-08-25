@@ -20,7 +20,7 @@ stat.mockImplementation((path, options, callback) => {
 });
 
 test('clean trash', () => {
-  const clean = cleanTrash('/data');
+  const clean = cleanTrash('/data').toPromise();
 
   return expect(clean).resolves.toEqual({
     action: 'trash',
@@ -35,7 +35,7 @@ test('clean trash with new file', () => {
   mockStats.mockResolvedValueOnce({
     mtime: new Date(),
   });
-  const clean = cleanTrash('/data');
+  const clean = cleanTrash('/data').toPromise();
 
   return expect(clean).resolves.toEqual({
     action: 'trash',
@@ -50,7 +50,7 @@ test('clean trash with old file', () => {
   mockStats.mockResolvedValueOnce({
     mtime: new Date('1995-12-17T03:24:00'),
   });
-  const clean = cleanTrash('/data');
+  const clean = cleanTrash('/data').toPromise();
 
   return expect(clean).resolves.toEqual({
     action: 'trash',
@@ -63,7 +63,7 @@ test('clean trash with error file', () => {
     '/data/test.txt',
   ]);
   mockStats.mockRejectedValueOnce(new Error());
-  const clean = cleanTrash('/data');
+  const clean = cleanTrash('/data').toPromise();
 
   return expect(clean).resolves.toEqual({
     action: 'trash',

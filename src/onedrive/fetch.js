@@ -15,6 +15,7 @@ const createFetch = async (refreshToken) => {
       },
     };
 
+    // @TODO Deal with rate limiting and/or 500 errors.
     return fetch(input, options);
   };
 };

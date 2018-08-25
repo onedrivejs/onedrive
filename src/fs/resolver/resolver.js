@@ -24,13 +24,7 @@ const resolver = (directory) => {
   // debounce.
   const clean = (new Subject()).pipe(
     debounceTime(1000),
-    flatMap(() => merge(
-      of({
-        action: 'trash',
-        phase: 'start',
-      }),
-      cleanTrash(directory),
-    )),
+    flatMap(() => cleanTrash(directory)),
   );
 
   return (oneDriveStream) => {
