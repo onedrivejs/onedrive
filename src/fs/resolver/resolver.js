@@ -69,15 +69,12 @@ const resolver = (directory) => {
         // Anything can be removed, but it may no longer exist if the parent
         // was removed.
         if (data.action === 'remove') {
-          return merge(
-            formatAction('remove', 'start', data.type, data.name),
-            from(remove(directory, data.type, data.name)).pipe(
-              map((value) => {
-                // After the file remove is done, clean the trash.
-                clean.next(value);
-                return value;
-              }),
-            ),
+          return remove(directory, data.type, data.name).pipe(
+            map((value) => {
+              // After the file remove is done, clean the trash.
+              clean.next(value);
+              return value;
+            }),
           );
         }
 

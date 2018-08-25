@@ -1,5 +1,5 @@
 const { join, dirname } = require('path');
-const { from, merge, EMPTY } = require('rxjs');
+const { merge } = require('rxjs');
 const { fromFile: hashFromFile } = require('hasha');
 const {
   ensureDir,

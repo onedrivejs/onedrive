@@ -33,7 +33,10 @@ copyFile.mockImplementation((directory, name) => from([
   formatAction('copy', 'start', 'file', name),
   formatAction('copy', 'end', 'file', name),
 ]));
-remove.mockImplementation((directory, type, name) => formatAction('remove', 'end', type, name));
+remove.mockImplementation((directory, type, name) => from([
+  formatAction('remove', 'start', type, name),
+  formatAction('remove', 'end', type, name),
+]));
 cleanTrash.mockImplementation(() => formatAction('trash', 'end'));
 
 

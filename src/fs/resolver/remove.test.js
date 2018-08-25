@@ -8,7 +8,7 @@ jest.mock('fs-extra');
 test('remove file', () => {
   const name = 'test.txt';
   const type = 'file';
-  const result = remove('/data', type, name);
+  const result = remove('/data', type, name).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'remove',
@@ -24,7 +24,7 @@ test('remove file that no longer exists', () => {
   const error = new Error();
   error.code = 'ENOENT';
   move.mockRejectedValueOnce(error);
-  const result = remove('/data', type, name);
+  const result = remove('/data', type, name).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'remove',
@@ -38,7 +38,7 @@ test('remove file that no longer exists', () => {
 test('remove file that fails for some reason', () => {
   const error = new Error();
   move.mockRejectedValueOnce(error);
-  const result = remove('/data', 'file', 'test.txt');
+  const result = remove('/data', 'file', 'test.txt').toPromise();
 
   return expect(result).rejects.toEqual(error);
 });
