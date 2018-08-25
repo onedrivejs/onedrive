@@ -58,16 +58,10 @@ const resolver = (directory) => {
           return from(shouldCopyFile(directory, data.from, data.hash)).pipe(
             flatMap((shouldCopy) => {
               if (shouldCopy) {
-                return merge(
-                  formatAction('copy', 'start', data.type, data.name),
-                  copyFile(directory, data.name, data.from),
-                );
+                return copyFile(directory, data.name, data.from);
               }
 
-              return merge(
-                formatAction('download', 'start', data.type, data.name),
-                downloadFile(directory, data.name, data.modified, data.downloadUrl),
-              );
+              return downloadFile(directory, data.name, data.modified, data.downloadUrl);
             }),
           );
         }

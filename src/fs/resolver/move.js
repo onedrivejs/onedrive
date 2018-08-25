@@ -7,12 +7,13 @@ const {
 } = require('fs-extra');
 const formatAction = require('../../utils/format-action');
 
-const moveItem = (directory, type, name, oldName) => (
-  merge(
+const moveItem = (directory, type, name, oldName) => {
+  const path = join(directory, name);
+  const oldPath = join(directory, oldName);
+
+  return merge(
     formatAction('move', 'start', type, name),
     Promise.resolve().then(async () => {
-      const path = join(directory, name);
-      const oldPath = join(directory, oldName);
       try {
         await ensureDir(dirname(path));
         await move(oldPath, path);
@@ -47,7 +48,7 @@ const moveItem = (directory, type, name, oldName) => (
         }
       }
     }),
-  )
-);
+  );
+};
 
 module.exports = moveItem;

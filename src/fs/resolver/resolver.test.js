@@ -29,7 +29,10 @@ move.mockImplementation((directory, type, name) => from([
   formatAction('move', 'end', type, name),
 ]));
 shouldCopyFile.mockResolvedValue(true);
-copyFile.mockImplementation((directory, name) => formatAction('copy', 'end', 'file', name));
+copyFile.mockImplementation((directory, name) => from([
+  formatAction('copy', 'start', 'file', name),
+  formatAction('copy', 'end', 'file', name),
+]));
 remove.mockImplementation((directory, type, name) => formatAction('remove', 'end', type, name));
 cleanTrash.mockImplementation(() => formatAction('trash', 'end'));
 

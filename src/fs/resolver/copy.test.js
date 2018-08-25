@@ -49,7 +49,7 @@ test('should copy file that cannot be read for some reason', () => {
 });
 
 test('copy file', () => {
-  const result = copyFile('/data', 'test.txt', 'test2.txt');
+  const result = copyFile('/data', 'test.txt', 'test2.txt').toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'copy',
@@ -63,7 +63,7 @@ test('copy file that no longer exists', () => {
   const error = new Error();
   error.code = 'ENOENT';
   copy.mockRejectedValueOnce(error);
-  const result = copyFile('/data', 'test.txt', 'test2.txt');
+  const result = copyFile('/data', 'test.txt', 'test2.txt').toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'copy',
@@ -77,7 +77,7 @@ test('copy file that no longer exists', () => {
 test('copy file onto an existing file', () => {
   const error = new Error();
   copy.mockRejectedValueOnce(error);
-  const result = copyFile('/data', 'test.txt', 'test2.txt');
+  const result = copyFile('/data', 'test.txt', 'test2.txt').toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'copy',
@@ -93,7 +93,7 @@ test('copy file onto an error file, that then no longer exists', () => {
   const second = new Error();
   second.code = 'ENOENT';
   copy.mockRejectedValueOnce(second);
-  const result = copyFile('/data', 'test.txt', 'test2.txt');
+  const result = copyFile('/data', 'test.txt', 'test2.txt').toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'copy',
@@ -108,7 +108,7 @@ test('copy file that errors on multiple counts', () => {
   const error = new Error();
   copy.mockRejectedValueOnce(error);
   copy.mockRejectedValueOnce(error);
-  const result = copyFile('/data', 'test.txt', 'test2.txt');
+  const result = copyFile('/data', 'test.txt', 'test2.txt').toPromise();
 
   return expect(result).rejects.toEqual(error);
 });
