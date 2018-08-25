@@ -5,7 +5,7 @@ const {
   EMPTY,
 } = require('rxjs');
 const { flatMap } = require('rxjs/operators');
-const { sep, join } = require('path');
+const { sep, join, dirname, basename } = require('path');
 const { createReadStream } = require('fs');
 const { DateTime } = require('luxon');
 const ensureDir = require('./ensure-dir');
@@ -47,12 +47,11 @@ const shouldUploadFile = async (refreshToken, name, hash, modified) => {
 };
 
 const getUploadUrl = async (refreshToken, name) => {
-  const parts = name.split(sep);
-  let fileName = name;
+  const directory = dirname(name);
+  const fileName = basename(name);
   let parentId = 'root';
-  if (parts.length > 1) {
-    fileName = parts.slice(name.length - 1);
-    parentId = await ensureDir(refreshToken, parts.slice(0, name.length - 1).join(sep));
+  if (directory !== '.') {
+    parentId = await ensureDir(refreshToken, directory);
   }
 
   const fetch = await createFetch(refreshToken);
@@ -76,6 +75,7 @@ const getUploadUrl = async (refreshToken, name) => {
   if (!response.ok) {
     const error = new Error(`${response.status} ${response.statusText} ${url}`);
     error.data = data;
+    console.dir(data);
     throw error;
   }
 

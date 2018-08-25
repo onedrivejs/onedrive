@@ -7,6 +7,12 @@ const {
 } = require('fs-extra');
 const { formatAction } = require('../../utils/format-action');
 
+// @TODO Create some sort of method for preventing a useless copy. A useless
+//       copy is when the file you are copying from has the same hash as the
+//       file you are copying too. Basically, if you are overridding a file with
+//       the copy, check to ensure that it's not pointless. maybe the shouldCopyFile
+//       can return an ENUM?
+
 const shouldCopyFile = async (directory, fromName, hash) => {
   const fromPath = join(directory, fromName);
   try {
@@ -14,6 +20,8 @@ const shouldCopyFile = async (directory, fromName, hash) => {
 
     // The file hash is the same, allow copy.
     if (hash === fileHash) {
+      // @TODO Maybe this is where the check should go to ensure the copy isn't
+      //       useless. But we can't return false or the file will be downloaded.
       return true;
     }
   } catch (e) {
