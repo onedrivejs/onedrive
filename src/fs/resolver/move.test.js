@@ -8,7 +8,7 @@ jest.mock('fs-extra');
 test('move file', () => {
   const name = 'test2.txt';
   const type = 'file';
-  const result = moveItem('/data', type, name, 'test2.txt');
+  const result = moveItem('/data', type, name, 'test2.txt').toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'move',
@@ -24,7 +24,7 @@ test('move file that no longer exists', () => {
   move.mockRejectedValueOnce(error);
   const name = 'test2.txt';
   const type = 'file';
-  const result = moveItem('/data', type, name, 'test2.txt');
+  const result = moveItem('/data', type, name, 'test2.txt').toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'move',
@@ -40,7 +40,7 @@ test('move file that will be overwritten', () => {
   move.mockRejectedValueOnce(error);
   const name = 'test2.txt';
   const type = 'file';
-  const result = moveItem('/data', type, name, 'test2.txt');
+  const result = moveItem('/data', type, name, 'test2.txt').toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'move',
@@ -59,7 +59,7 @@ test('move file that will be overwritten then errors', () => {
   move.mockRejectedValueOnce(error2);
   const name = 'test2.txt';
   const type = 'file';
-  const result = moveItem('/data', type, name, 'test2.txt');
+  const result = moveItem('/data', type, name, 'test2.txt').toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'move',
@@ -74,7 +74,7 @@ test('move file that will error out', () => {
   const error = new Error();
   move.mockRejectedValueOnce(error);
   move.mockRejectedValueOnce(error);
-  const result = moveItem('/data', 'file', 'test2.txt', 'test2.txt');
+  const result = moveItem('/data', 'file', 'test2.txt', 'test2.txt').toPromise();
 
   return expect(result).rejects.toEqual(error);
 });

@@ -48,10 +48,7 @@ const resolver = (directory) => {
 
         // Anything can be moved.
         if (data.action === 'move') {
-          return merge(
-            formatAction('move', 'start', data.type, data.name),
-            move(directory, data.type, data.name, data.oldName),
-          );
+          return move(directory, data.type, data.name, data.oldName);
         }
 
         // If a directory is copied, all of the files in that directory are copied

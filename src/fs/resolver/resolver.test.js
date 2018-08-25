@@ -24,7 +24,10 @@ downloadFile.mockImplementation((directory, name) => from([
   formatAction('download', 'start', 'file', name),
   formatAction('download', 'end', 'file', name),
 ]));
-move.mockImplementation((directory, type, name) => formatAction('move', 'end', type, name));
+move.mockImplementation((directory, type, name) => from([
+  formatAction('move', 'start', type, name),
+  formatAction('move', 'end', type, name),
+]));
 shouldCopyFile.mockResolvedValue(true);
 copyFile.mockImplementation((directory, name) => formatAction('copy', 'end', 'file', name));
 remove.mockImplementation((directory, type, name) => formatAction('remove', 'end', type, name));

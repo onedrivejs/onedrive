@@ -56,7 +56,7 @@ const downloadFile = (directory, name, hash, modified, downloadUrl) => {
 
       return merge(
         formatAction('download', 'start', type, name),
-        (async () => {
+        Promise.resolve().then(async () => {
           const response = await fetch(downloadUrl);
 
           if (!response.ok) {
@@ -91,7 +91,7 @@ const downloadFile = (directory, name, hash, modified, downloadUrl) => {
             // Some other error we don't know how to deal with.
             throw error;
           }
-        })(),
+        }),
       );
     }),
   );
