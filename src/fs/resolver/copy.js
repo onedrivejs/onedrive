@@ -11,7 +11,11 @@ const { formatAction } = require('../../utils/format-action');
 //       copy is when the file you are copying from has the same hash as the
 //       file you are copying too. Basically, if you are overridding a file with
 //       the copy, check to ensure that it's not pointless. maybe the shouldCopyFile
-//       can return an ENUM?
+//       can return an ENUM? Or maybe it would be best if it just returned the
+//       proper observable or an empty one. This could also be moved to a
+//       a seperate file since it deals with both copying and downloading.
+//       maybe rename to copyDownloadFile and it's just a new observable with a
+//       flatMap.
 
 const shouldCopyFile = async (directory, fromName, hash) => {
   const fromPath = join(directory, fromName);
