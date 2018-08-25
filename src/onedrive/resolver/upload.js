@@ -185,7 +185,4 @@ const uploadFile = (directory, refreshToken, name, hash, modified, size) => {
   );
 };
 
-module.exports = {
-  shouldUploadFile,
-  uploadFile,
-};
+module.exports = uploadFile;

@@ -1,7 +1,7 @@
 const { EMPTY } = require('rxjs');
 const { flatMap } = require('rxjs/operators');
 const createFolder = require('./create');
-const { uploadFile } = require('./upload');
+const uploadFile = require('./upload');
 
 const resolver = (directory, refreshToken) => (
   fsStream => (
