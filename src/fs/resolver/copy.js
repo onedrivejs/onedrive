@@ -1,6 +1,5 @@
 const { join, dirname } = require('path');
 const { merge } = require('rxjs');
-const { fromFile: hashFromFile } = require('hasha');
 const {
   ensureDir,
   copy,
@@ -16,31 +15,6 @@ const { formatAction } = require('../../utils/format-action');
 //       a seperate file since it deals with both copying and downloading.
 //       maybe rename to copyDownloadFile and it's just a new observable with a
 //       flatMap.
-
-const shouldCopyFile = async (directory, fromName, hash) => {
-  const fromPath = join(directory, fromName);
-  try {
-    const fileHash = await hashFromFile(fromPath, { algorithm: 'sha1' });
-
-    // The file hash is the same, allow copy.
-    if (hash === fileHash) {
-      // @TODO Maybe this is where the check should go to ensure the copy isn't
-      //       useless. But we can't return false or the file will be downloaded.
-      return true;
-    }
-  } catch (e) {
-    // No such file or directory.
-    if (e.code === 'ENOENT') {
-      return false;
-    }
-
-    // Some other error we don't know how to deal with.
-    throw e;
-  }
-
-  // Be safe, download the file.
-  return false;
-};
 
 const copyFile = (directory, name, fromName) => {
   const type = 'file';
@@ -91,7 +65,4 @@ const copyFile = (directory, name, fromName) => {
   );
 };
 
-module.exports = {
-  shouldCopyFile,
-  copyFile,
-};
+module.exports = copyFile;

@@ -1,18 +1,16 @@
 const {
   merge,
-  from,
   EMPTY,
   Subject,
 } = require('rxjs');
 const {
   flatMap,
   map,
-  filter,
   debounceTime,
 } = require('rxjs/operators');
 const createFolder = require('./create');
 const downloadFile = require('./download');
-const { shouldCopyFile, copyFile } = require('./copy');
+const copyDownloadFile = require('./copy-download');
 const move = require('./move');
 const remove = require('./remove');
 const cleanTrash = require('./clean');
@@ -47,14 +45,13 @@ const resolver = (directory) => {
         // as well. We'll skip the folder copy and wait for each file to be
         // copied.
         if (data.action === 'copy' && data.type === 'file') {
-          return from(shouldCopyFile(directory, data.from, data.hash)).pipe(
-            flatMap((shouldCopy) => {
-              if (shouldCopy) {
-                return copyFile(directory, data.name, data.from);
-              }
-
-              return downloadFile(directory, data.name, data.modified, data.downloadUrl);
-            }),
+          return copyDownloadFile(
+            directory,
+            data.name,
+            data.modified,
+            data.hash,
+            data.from,
+            data.downloadUrl,
           );
         }
 
@@ -72,7 +69,6 @@ const resolver = (directory) => {
 
         return EMPTY;
       }),
-      filter(item => !!item),
     );
 
     return merge(resolved, clean);

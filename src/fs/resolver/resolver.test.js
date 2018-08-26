@@ -3,18 +3,18 @@ const { take } = require('rxjs/operators');
 const { formatAction } = require('../../utils/format-action');
 const createFolder = require('./create');
 const move = require('./move');
-const downloadFile= require('./download');
-const { shouldCopyFile, copyFile } = require('./copy');
+const downloadFile = require('./download');
+const copyDownloadFile = require('./copy-download');
 const remove = require('./remove');
 const cleanTrash = require('./clean');
 const resolver = require('./resolver');
 
 jest.mock('./create');
 jest.mock('./download');
-jest.mock('./copy');
 jest.mock('./move');
 jest.mock('./remove');
 jest.mock('./clean');
+jest.mock('./copy-download');
 
 createFolder.mockImplementation((directory, name) => from([
   formatAction('create', 'start', 'folder', name),
@@ -28,8 +28,7 @@ move.mockImplementation((directory, type, name) => from([
   formatAction('move', 'start', type, name),
   formatAction('move', 'end', type, name),
 ]));
-shouldCopyFile.mockResolvedValue(true);
-copyFile.mockImplementation((directory, name) => from([
+copyDownloadFile.mockImplementation((directory, name) => from([
   formatAction('copy', 'start', 'file', name),
   formatAction('copy', 'end', 'file', name),
 ]));
@@ -167,8 +166,14 @@ test('resolver copy file', () => {
 
 test('resolver copy file download', () => {
   // @TODO Why does this execute twice?
-  shouldCopyFile.mockResolvedValueOnce(false);
-  shouldCopyFile.mockResolvedValueOnce(false);
+  copyDownloadFile.mockImplementationOnce((directory, name) => from([
+    formatAction('download', 'start', 'file', name),
+    formatAction('download', 'end', 'file', name),
+  ]));
+  copyDownloadFile.mockImplementationOnce((directory, name) => from([
+    formatAction('download', 'start', 'file', name),
+    formatAction('download', 'end', 'file', name),
+  ]));
   const oneDriveStream = new Subject();
   const fsResolver = resolver('/data')(oneDriveStream);
   const result = Promise.all([
