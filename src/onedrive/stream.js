@@ -1,7 +1,6 @@
 const { map } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const { join } = require('path');
-const { Map } = require('immutable');
 const delta = require('./delta');
 
 const formatAction = (action, file, name, hash) => {
@@ -26,7 +25,7 @@ const formatAction = (action, file, name, hash) => {
 };
 
 const stream = (refreshToken) => {
-  let files = new Map();
+  const files = new Map();
 
   return delta(refreshToken).pipe(
     map((file) => {
@@ -41,7 +40,7 @@ const stream = (refreshToken) => {
       }
 
       if ('deleted' in file) {
-        files = files.remove(file.id);
+        files.delete(file.id);
         return formatAction('remove', file, name, hash);
       }
 
@@ -56,7 +55,7 @@ const stream = (refreshToken) => {
           action = formatAction('change', file, name, hash);
         }
       } else {
-        const other = hash ? files.find(f => f.hash === hash) : undefined;
+        const other = hash ? [...files.values()].find(f => f.hash === hash) : undefined;
         if (other) {
           action = {
             ...formatAction('copy', file, name, hash),
@@ -67,7 +66,7 @@ const stream = (refreshToken) => {
         }
       }
 
-      files = files.set(file.id, {
+      files.set(file.id, {
         name,
         hash,
       });

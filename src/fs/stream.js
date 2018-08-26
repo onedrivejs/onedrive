@@ -1,7 +1,6 @@
 const { fromEvent, from } = require('rxjs');
 const { DateTime } = require('luxon');
 const { flatMap, map, filter } = require('rxjs/operators');
-const { Map, Set } = require('immutable');
 
 const formatAction = (action, file) => {
   let type;
@@ -31,8 +30,8 @@ const formatAction = (action, file) => {
 };
 
 const stream = (client, directory) => {
-  let adding = new Set();
-  let hashes = new Map();
+  const adding = new Set();
+  const hashes = new Map();
 
   client.command(['subscribe', directory, 'onedrive', {
     // Exclude files and folders that begin with .
@@ -49,14 +48,14 @@ const stream = (client, directory) => {
       // Create a map of files by id.
       const fileActions = resp.files.reduce((actions, file) => {
         const a = [
-          ...actions.get(file.ino, []),
+          ...actions.get(file.ino) || [],
           file,
         ];
 
         return actions.set(file.ino, a);
       }, new Map());
 
-      return from(fileActions.reduce((actions, items) => {
+      return from([...fileActions.values()].reduce((actions, items) => {
         let action;
 
         // If there are exactly two actions, this may be a file move.
@@ -102,7 +101,7 @@ const stream = (client, directory) => {
       if (value.type === 'file') {
         if (value.action === 'add' && value.hash === null) {
           // Add to state store.
-          adding = adding.add(value.id);
+          adding.add(value.id);
           return undefined;
         }
 
@@ -114,10 +113,10 @@ const stream = (client, directory) => {
         if (
           value.action === 'change'
           && value.hash !== null
-          && adding.get(value.id)
+          && adding.has(value.id)
         ) {
           // Remove from state.
-          adding = adding.remove(value.id);
+          adding.delete(value.id);
           return {
             ...value,
             action: 'add',
@@ -131,9 +130,9 @@ const stream = (client, directory) => {
     filter(v => !!v),
     map((value) => {
       if (value.action === 'add' && value.hash) {
-        const name = hashes.findKey(hash => hash === value.hash);
+        const [name] = [...hashes.entries()].find(([, hash]) => hash === value.hash) || [undefined];
         if (name) {
-          hashes = hashes.set(value.name, value.hash);
+          hashes.set(value.name, value.hash);
           return {
             ...value,
             action: 'copy',
@@ -144,13 +143,13 @@ const stream = (client, directory) => {
 
       // When a file is deleted, remove the hash from the state.
       if (value.action === 'remove') {
-        hashes = hashes.remove(value.name);
+        hashes.delete(value.name);
         return value;
       }
 
       // Add every hash to the store (if there is one)
       if (value.hash) {
-        hashes = hashes.set(value.name, value.hash);
+        hashes.set(value.name, value.hash);
         return value;
       }
 
