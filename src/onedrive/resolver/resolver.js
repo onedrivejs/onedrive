@@ -2,6 +2,7 @@ const { EMPTY } = require('rxjs');
 const { flatMap } = require('rxjs/operators');
 const createFolder = require('./create');
 const uploadFile = require('./upload');
+const move = require('./move');
 
 const resolver = (directory, refreshToken) => (
   fsStream => (
@@ -21,6 +22,10 @@ const resolver = (directory, refreshToken) => (
             data.modified,
             data.size,
           );
+        }
+
+        if (data.action === 'move') {
+          return move(refreshToken, data.type, data.name, data.oldName);
         }
 
         return EMPTY;

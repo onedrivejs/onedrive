@@ -1,4 +1,5 @@
 const { sep } = require('path');
+const createError = require('../../utils/error');
 const createFetch = require('../fetch');
 
 const ensureDir = async (refreshToken, name) => {
@@ -27,9 +28,7 @@ const ensureDir = async (refreshToken, name) => {
 
     // Gracefully handle the error somehow?
     if (!response.ok) {
-      const error = new Error(`${response.status} ${response.statusText} ${url}`);
-      error.data = data;
-      throw error;
+      throw createError(response, url, data);
     }
 
     parentId = data.id;

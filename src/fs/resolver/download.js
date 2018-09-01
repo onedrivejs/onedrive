@@ -9,6 +9,7 @@ const { promisify } = require('util');
 const promisePipe = require('promisepipe');
 const fetch = require('node-fetch');
 const { PassThrough } = require('stream');
+const createError = require('../../utils/error');
 const { formatAction } = require('../../utils/format-action');
 
 const stat = promisify(fs.stat);
@@ -60,7 +61,7 @@ const downloadFile = (directory, name, hash, modified, downloadUrl) => {
           const response = await fetch(downloadUrl);
 
           if (!response.ok) {
-            return formatAction('download', new Error(`${response.status} ${response.statusText} ${downloadUrl}`), type, name);
+            return formatAction('download', createError(response, downloadUrl), type, name);
           }
 
           try {

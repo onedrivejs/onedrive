@@ -10,6 +10,7 @@ const { createReadStream } = require('fs');
 const { DateTime } = require('luxon');
 const ensureDir = require('./ensure-dir');
 const createFetch = require('../fetch');
+const createError = require('../../utils/error');
 const { formatAction, formatActionSync } = require('../../utils/format-action');
 
 const shouldUploadFile = async (refreshToken, name, hash, modified) => {
@@ -31,9 +32,7 @@ const shouldUploadFile = async (refreshToken, name, hash, modified) => {
       return true;
     }
 
-    const error = new Error(`${response.status} ${response.statusText} ${url}`);
-    error.data = data;
-    throw error;
+    throw createError(response, url, data);
   }
 
   const fileModified = DateTime.fromISO(data.lastModifiedDateTime);
@@ -73,9 +72,7 @@ const getUploadUrl = async (refreshToken, name) => {
 
   // Handle the error gracefully?
   if (!response.ok) {
-    const error = new Error(`${response.status} ${response.statusText} ${url}`);
-    error.data = data;
-    throw error;
+    throw createError(response, url, data);
   }
 
   return data.uploadUrl;
@@ -167,9 +164,7 @@ const uploadFile = (directory, refreshToken, name, hash, modified, size) => {
 
             // Gracefully handle the error somehow?
             if (!response.ok) {
-              const error = new Error(`${response.status} ${response.statusText} ${url}`);
-              error.data = data;
-              throw error;
+              throw createError(response, url, data);
             }
 
             progress.next(formatActionSync('upload', 'end', type, name, [i + 1, chunks.length]));
