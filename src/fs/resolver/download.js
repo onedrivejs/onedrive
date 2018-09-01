@@ -61,7 +61,7 @@ const downloadFile = (directory, name, hash, modified, downloadUrl) => {
           const response = await fetch(downloadUrl);
 
           if (!response.ok) {
-            return formatAction('download', createError(response, downloadUrl), type, name);
+            return formatAction('download', createError(response), type, name);
           }
 
           try {

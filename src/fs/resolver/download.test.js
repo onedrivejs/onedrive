@@ -88,6 +88,7 @@ test('download file bad response', () => {
   const response = {
     ok: false,
     status: 404,
+    url: downloadUrl,
     statusText: 'Not Found',
   };
   fetch.mockResolvedValueOnce(response);

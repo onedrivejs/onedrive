@@ -8,15 +8,15 @@ const { flatMap } = require('rxjs/operators');
 const { join, dirname, basename } = require('path');
 const { createReadStream } = require('fs');
 const { DateTime } = require('luxon');
-const ensureDir = require('./ensure-dir');
+const getParentId = require('./parent');
+const fetchItem = require('./item');
 const createFetch = require('../fetch');
 const createError = require('../../utils/error');
 const { formatAction, formatActionSync } = require('../../utils/format-action');
 
 const shouldUploadFile = async (refreshToken, name, hash, modified) => {
   const fetch = await createFetch(refreshToken);
-  const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${name}`;
-  const response = await fetch(url);
+  const response = await fetchItem(fetch, name);
   const data = await response.json();
 
   const fileHash = data.file && data.file.hashes ? data.file.hashes.sha1Hash.toLowerCase() : null;
@@ -32,7 +32,7 @@ const shouldUploadFile = async (refreshToken, name, hash, modified) => {
       return true;
     }
 
-    throw createError(response, url, data);
+    throw createError(response, data);
   }
 
   const fileModified = DateTime.fromISO(data.lastModifiedDateTime);
@@ -45,15 +45,14 @@ const shouldUploadFile = async (refreshToken, name, hash, modified) => {
   return true;
 };
 
-const getUploadUrl = async (refreshToken, name) => {
+const getUploadUrl = async (fetch, name) => {
   const directory = dirname(name);
   const fileName = basename(name);
   let parentId = 'root';
   if (directory !== '.') {
-    parentId = await ensureDir(refreshToken, directory);
+    parentId = await getParentId(fetch, name);
   }
 
-  const fetch = await createFetch(refreshToken);
   const url = `https://graph.microsoft.com/v1.0/me/drive/items/${parentId}:/${fileName}:/createUploadSession`;
   const response = await fetch(url, {
     method: 'POST',
@@ -72,7 +71,7 @@ const getUploadUrl = async (refreshToken, name) => {
 
   // Handle the error gracefully?
   if (!response.ok) {
-    throw createError(response, url, data);
+    throw createError(response, data);
   }
 
   return data.uploadUrl;
@@ -93,10 +92,8 @@ const uploadFile = (directory, refreshToken, name, hash, modified, size) => {
         formatAction('upload', 'start', type, name),
         progress,
         Promise.resolve().then(async () => {
-          const [url, fetch] = await Promise.all([
-            getUploadUrl(refreshToken, name),
-            createFetch(refreshToken),
-          ]);
+          const fetch = await createFetch(refreshToken);
+          const url = await getUploadUrl(fetch, name);
 
           let chunks = [];
 
@@ -164,7 +161,7 @@ const uploadFile = (directory, refreshToken, name, hash, modified, size) => {
 
             // Gracefully handle the error somehow?
             if (!response.ok) {
-              throw createError(response, url, data);
+              throw createError(response, data);
             }
 
             progress.next(formatActionSync('upload', 'end', type, name, [i + 1, chunks.length]));

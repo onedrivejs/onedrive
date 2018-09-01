@@ -1,12 +1,9 @@
 const { sep } = require('path');
 const createError = require('../../utils/error');
-const createFetch = require('../fetch');
 
-const ensureDir = async (refreshToken, name) => {
+const ensureDir = async (fetch, name) => {
   let parentId = 'root';
   const parts = name.split(sep);
-
-  const fetch = await createFetch(refreshToken);
 
   // Itentially adding a loop so the requests are *not* executed in parallel.
   // eslint-disable-next-line no-restricted-syntax
@@ -28,7 +25,7 @@ const ensureDir = async (refreshToken, name) => {
 
     // Gracefully handle the error somehow?
     if (!response.ok) {
-      throw createError(response, url, data);
+      throw createError(response, data);
     }
 
     parentId = data.id;

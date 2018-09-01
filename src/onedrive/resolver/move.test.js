@@ -1,9 +1,11 @@
+const fetchItem = require('./item');
 const createFetch = require('../fetch');
 const move = require('./move');
 
 jest.mock('node-fetch');
 jest.mock('../fetch');
-jest.mock('./ensure-dir');
+jest.mock('./parent');
+jest.mock('./item');
 jest.mock('fs');
 
 const mockJsonValue = {};
@@ -18,6 +20,7 @@ const fetch = jest.fn()
   .mockResolvedValue(mockFetchValue);
 
 createFetch.mockResolvedValue(fetch);
+fetchItem.mockImplementation(fetch);
 
 test('move file', () => {
   const type = 'file';
@@ -56,6 +59,7 @@ test('move file does not exist', () => {
     ok: false,
     status: 404,
     statusText: 'Not Found',
+    url,
     json,
   };
   fetch.mockResolvedValueOnce(data);
@@ -81,6 +85,7 @@ test('move file unkown error', () => {
     ok: false,
     status: 500,
     statusText: 'ERROR',
+    url,
     json,
   };
   fetch.mockResolvedValueOnce(data);
@@ -100,6 +105,7 @@ test('move file root folder error', () => {
     ok: false,
     status: 500,
     statusText: 'ERROR',
+    url,
     json,
   };
   fetch.mockResolvedValueOnce(mockFetchValue);
@@ -120,9 +126,9 @@ test('move file error', () => {
     ok: false,
     status: 500,
     statusText: 'ERROR',
+    url,
     json,
   };
-  fetch.mockResolvedValueOnce(mockFetchValue);
   fetch.mockResolvedValueOnce(mockFetchValue);
   fetch.mockResolvedValueOnce(data);
   const error = new Error(`${data.status} ${data.statusText} ${url}`);

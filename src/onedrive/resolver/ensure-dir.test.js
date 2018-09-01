@@ -6,7 +6,6 @@ jest.mock('node-fetch');
 jest.mock('../fetch');
 jest.useFakeTimers();
 
-
 beforeEach(() => {
   jest.clearAllMocks();
 });
@@ -23,7 +22,7 @@ test('creates a folder in the root', () => {
   createFetch.mockResolvedValue(fetch);
 
   const name = 'test';
-  const result = ensureDir('abcd', name);
+  const result = ensureDir(fetch, name);
 
   return expect(result).resolves.toEqual('123');
 });
@@ -39,12 +38,13 @@ test('creates a folder in the root failure', () => {
     ok: false,
     status: 500,
     statusText: 'FAIL!',
+    url: 'https://graph.microsoft.com/v1.0/me/drive/items/root/children',
     json,
   });
   createFetch.mockResolvedValue(fetch);
 
   const name = 'test';
-  const result = ensureDir('abcd', name);
+  const result = ensureDir(fetch, name);
 
   return expect(result).rejects.toEqual(new Error('500 FAIL! https://graph.microsoft.com/v1.0/me/drive/items/root/children'));
 });

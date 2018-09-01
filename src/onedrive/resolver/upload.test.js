@@ -1,21 +1,27 @@
 const { DateTime } = require('luxon');
+const fetchItem = require('./item');
 const createFetch = require('../fetch');
 const uploadFile = require('./upload');
 
 jest.mock('node-fetch');
 jest.mock('../fetch');
-jest.mock('./ensure-dir');
+jest.mock('./parent');
+jest.mock('./item');
 jest.mock('fs');
 
 const mockJsonValue = {};
 const json = jest.fn()
   .mockResolvedValue(mockJsonValue);
 
-const mockFetch = () => ({
+const mockFetchValue = {
   ok: true,
   json,
-});
-createFetch.mockResolvedValue(mockFetch);
+};
+const fetch = jest.fn()
+  .mockResolvedValue(mockFetchValue);
+
+createFetch.mockResolvedValue(fetch);
+fetchItem.mockImplementation(fetch);
 
 
 test('upload file', () => {
@@ -69,11 +75,11 @@ test('upload file that has a matching hash', () => {
 });
 
 test('upload file that does not yet exist', () => {
-  createFetch.mockResolvedValueOnce(() => ({
+  fetch.mockResolvedValueOnce({
     ok: false,
     status: 404,
     json,
-  }));
+  });
 
   const name = 'test.txt';
   const result = uploadFile('/tmp', '1234', 'test.txt', 'abcd', DateTime.local(), 128).toPromise();
@@ -93,9 +99,10 @@ test('upload file that fails to retrieve stats', () => {
     ok: false,
     status: 500,
     statusText: 'ERROR',
+    url,
     json,
   };
-  createFetch.mockResolvedValueOnce(() => (data));
+  fetch.mockResolvedValueOnce(data);
   const error = new Error(`${data.status} ${data.statusText} ${url}`);
   error.data = data;
 
@@ -111,10 +118,11 @@ test('upload file that fails to retrieve upload url', () => {
     ok: false,
     status: 500,
     statusText: 'ERROR',
+    url,
     json,
   };
-  createFetch.mockResolvedValueOnce(mockFetch);
-  createFetch.mockResolvedValueOnce(() => (data));
+  fetch.mockResolvedValueOnce(mockFetchValue);
+  fetch.mockResolvedValueOnce(data);
   const error = new Error(`${data.status} ${data.statusText} ${url}`);
   error.data = data;
 
@@ -139,12 +147,13 @@ test('upload file failure', () => {
     ok: false,
     status: 500,
     statusText: 'ERROR',
+    url: undefined,
     json,
   };
   const error = new Error(`${data.status} ${data.statusText} ${undefined}`);
-  createFetch.mockResolvedValueOnce(mockFetch)
-    .mockResolvedValueOnce(mockFetch)
-    .mockResolvedValueOnce(() => data);
+  fetch.mockResolvedValueOnce(mockFetchValue)
+    .mockResolvedValueOnce(mockFetchValue)
+    .mockResolvedValueOnce(data);
   const result = uploadFile('/tmp', '1234', 'test.txt', 'abcd', DateTime.local(), 104857600).toPromise();
 
   return expect(result).rejects.toEqual(error);
