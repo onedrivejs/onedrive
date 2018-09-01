@@ -5,7 +5,7 @@ const {
   EMPTY,
 } = require('rxjs');
 const { flatMap } = require('rxjs/operators');
-const { sep, join, dirname, basename } = require('path');
+const { join, dirname, basename } = require('path');
 const { createReadStream } = require('fs');
 const { DateTime } = require('luxon');
 const ensureDir = require('./ensure-dir');
@@ -75,7 +75,6 @@ const getUploadUrl = async (refreshToken, name) => {
   if (!response.ok) {
     const error = new Error(`${response.status} ${response.statusText} ${url}`);
     error.data = data;
-    console.dir(data);
     throw error;
   }
 
