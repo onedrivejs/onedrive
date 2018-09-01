@@ -36,13 +36,34 @@ test('copy download file with non-matching hash', () => {
   return expect(result).resolves.toBeFalsy();
 });
 
-test('copy download file uneccessary copy.', () => {
+test('copy download file uneccessary copy', () => {
   hashFromFile.mockResolvedValueOnce('4321');
   hashFromFile.mockResolvedValueOnce('4321');
 
   const result = copyDownloadFile('/data', 'test.txt', DateTime.local(), '4321', 'testOld.txt').toPromise();
 
   return expect(result).resolves.toBeFalsy();
+});
+
+test('copy download file no override', () => {
+  hashFromFile.mockResolvedValueOnce('4321');
+  const error = new Error();
+  error.code = 'ENOENT';
+  hashFromFile.mockRejectedValueOnce(error);
+
+  const result = copyDownloadFile('/data', 'test.txt', DateTime.local(), '4321', 'testOld.txt').toPromise();
+
+  return expect(result).resolves.toBeTruthy();
+});
+
+test('copy download file no override throws error', () => {
+  hashFromFile.mockResolvedValueOnce('4321');
+  const error = new Error();
+  hashFromFile.mockRejectedValueOnce(error);
+
+  const result = copyDownloadFile('/data', 'test.txt', DateTime.local(), '4321', 'testOld.txt').toPromise();
+
+  return expect(result).rejects.toEqual(error);
 });
 
 test('copy download file that does not exist.', () => {
