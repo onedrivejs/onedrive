@@ -13,13 +13,13 @@ copy.mockResolvedValue(true);
 download.mockResolvedValue(false);
 hashFromFile.mockResolvedValue(undefined);
 
-test('should copy file', () => {
+test('copy download file', () => {
   const result = copyDownloadFile('/data', 'test.txt', DateTime.local(), '1234', 'testOld.txt').toPromise();
 
   return expect(result).resolves.toBeFalsy();
 });
 
-test('should copy file with identical hash', () => {
+test('copy download file with identical hash', () => {
   const hash = '1234';
   hashFromFile.mockResolvedValueOnce(hash);
 
@@ -28,7 +28,7 @@ test('should copy file with identical hash', () => {
   return expect(result).resolves.toBeTruthy();
 });
 
-test('should copy file with non-matching hash', () => {
+test('copy download file with non-matching hash', () => {
   hashFromFile.mockResolvedValueOnce('1234');
 
   const result = copyDownloadFile('/data', 'test.txt', DateTime.local(), '4321', 'testOld.txt').toPromise();
@@ -36,7 +36,16 @@ test('should copy file with non-matching hash', () => {
   return expect(result).resolves.toBeFalsy();
 });
 
-test('should copy file that does not exist.', () => {
+test('copy download file uneccessary copy.', () => {
+  hashFromFile.mockResolvedValueOnce('4321');
+  hashFromFile.mockResolvedValueOnce('4321');
+
+  const result = copyDownloadFile('/data', 'test.txt', DateTime.local(), '4321', 'testOld.txt').toPromise();
+
+  return expect(result).resolves.toBeFalsy();
+});
+
+test('copy download file that does not exist.', () => {
   const error = new Error();
   error.code = 'ENOENT';
   hashFromFile.mockRejectedValueOnce(error);
@@ -46,7 +55,7 @@ test('should copy file that does not exist.', () => {
   return expect(result).resolves.toBeFalsy();
 });
 
-test('should copy file that cannot be read for some reason', () => {
+test('copy download file that cannot be read for some reason', () => {
   const error = new Error();
   hashFromFile.mockRejectedValueOnce(error);
 
