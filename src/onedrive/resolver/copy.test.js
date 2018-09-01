@@ -25,8 +25,8 @@ fetchItem.mockImplementation(fetch);
 test('copy file', () => {
   const type = 'file';
   const name = 'test2.txt';
-  const oldName = 'test.txt';
-  const result = copy('1234', name, oldName).toPromise();
+  const fromName = 'test.txt';
+  const result = copy('1234', name, fromName).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'copy',
@@ -39,8 +39,8 @@ test('copy file', () => {
 test('copy file subfolder', () => {
   const type = 'file';
   const name = 'test/test2.txt';
-  const oldName = 'test.txt';
-  const result = copy('1234', name, oldName).toPromise();
+  const fromName = 'test.txt';
+  const result = copy('1234', name, fromName).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'copy',
@@ -53,8 +53,8 @@ test('copy file subfolder', () => {
 test('copy file does not exist', () => {
   const type = 'file';
   const name = 'test2.txt';
-  const oldName = 'test.txt';
-  const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${oldName}`;
+  const fromName = 'test.txt';
+  const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${fromName}`;
   const data = {
     ok: false,
     status: 404,
@@ -65,7 +65,7 @@ test('copy file does not exist', () => {
   fetch.mockResolvedValueOnce(data);
   const error = new Error(`${data.status} ${data.statusText} ${url}`);
   error.data = data;
-  const result = copy('1234', name, oldName).toPromise();
+  const result = copy('1234', name, fromName).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'copy',
@@ -79,8 +79,8 @@ test('copy file does not exist', () => {
 test('copy file unkown error', () => {
   const type = 'file';
   const name = 'test2.txt';
-  const oldName = 'test.txt';
-  const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${oldName}`;
+  const fromName = 'test.txt';
+  const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${fromName}`;
   const data = {
     ok: false,
     status: 500,
@@ -91,7 +91,7 @@ test('copy file unkown error', () => {
   fetch.mockResolvedValueOnce(data);
   const error = new Error(`${data.status} ${data.statusText} ${url}`);
   error.data = data;
-  const result = copy('1234', name, oldName).toPromise();
+  const result = copy('1234', name, fromName).toPromise();
 
   return expect(result).rejects.toEqual(error);
 });
@@ -99,7 +99,7 @@ test('copy file unkown error', () => {
 test('copy file root folder error', () => {
   const type = 'file';
   const name = 'test2.txt';
-  const oldName = 'test.txt';
+  const fromName = 'test.txt';
   const url = 'https://graph.microsoft.com/v1.0/me/drive/items/root';
   const data = {
     ok: false,
@@ -112,7 +112,7 @@ test('copy file root folder error', () => {
   fetch.mockResolvedValueOnce(data);
   const error = new Error(`${data.status} ${data.statusText} ${url}`);
   error.data = data;
-  const result = copy('1234', name, oldName).toPromise();
+  const result = copy('1234', name, fromName).toPromise();
 
   return expect(result).rejects.toEqual(error);
 });
@@ -120,7 +120,7 @@ test('copy file root folder error', () => {
 test('copy file error', () => {
   const type = 'file';
   const name = 'test2.txt';
-  const oldName = 'test.txt';
+  const fromName = 'test.txt';
   const url = 'https://graph.microsoft.com/v1.0/me/drive/items/undefined';
   const data = {
     ok: false,
@@ -133,7 +133,7 @@ test('copy file error', () => {
   fetch.mockResolvedValueOnce(data);
   const error = new Error(`${data.status} ${data.statusText} ${url}`);
   error.data = data;
-  const result = copy('1234', name, oldName).toPromise();
+  const result = copy('1234', name, fromName).toPromise();
 
   return expect(result).rejects.toEqual(error);
 });

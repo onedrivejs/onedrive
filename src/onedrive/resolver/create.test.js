@@ -1,8 +1,14 @@
 const createFolder = require('./create');
+const createFetch = require('../fetch');
 const ensureDir = require('./ensure-dir');
 
 jest.mock('./ensure-dir');
+jest.mock('../fetch');
 jest.useFakeTimers();
+
+const fetch = jest.fn();
+
+createFetch.mockResolvedValue(fetch);
 
 ensureDir.mockResolvedValue('root');
 

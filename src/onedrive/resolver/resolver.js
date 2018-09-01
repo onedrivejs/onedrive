@@ -3,6 +3,7 @@ const { flatMap } = require('rxjs/operators');
 const createFolder = require('./create');
 const uploadFile = require('./upload');
 const move = require('./move');
+const copyUploadFile = require('./copy-upload');
 
 const resolver = (directory, refreshToken) => (
   fsStream => (
@@ -26,6 +27,21 @@ const resolver = (directory, refreshToken) => (
 
         if (data.action === 'move') {
           return move(refreshToken, data.type, data.name, data.oldName);
+        }
+
+        // If a directory is copied, all of the files in that directory are
+        // copied as well. We'll skip the folder copy and wait for each file to
+        // be copied.
+        if (data.type === 'file' && data.action === 'copy') {
+          return copyUploadFile(
+            directory,
+            refreshToken,
+            data.name,
+            data.hash,
+            data.modified,
+            data.size,
+            data.from,
+          );
         }
 
         return EMPTY;

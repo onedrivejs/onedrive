@@ -6,14 +6,14 @@ const fetchItem = require('./item');
 const createError = require('../../utils/error');
 const { formatAction } = require('../../utils/format-action');
 
-const copyFile = (refreshToken, name, oldName) => {
+const copyFile = (refreshToken, name, fromName) => {
   const type = 'file';
 
   return merge(
     formatAction('copy', 'start', type, name),
     Promise.resolve().then(async () => {
       const fetch = await createFetch(refreshToken);
-      let response = await fetchItem(fetch, oldName);
+      let response = await fetchItem(fetch, fromName);
       let data = await response.json();
 
       if (!response.ok) {
@@ -43,10 +43,9 @@ const copyFile = (refreshToken, name, oldName) => {
           name: basename(name),
         }),
       });
-      data = await response.json();
 
       if (!response.ok) {
-        throw createError(response, data);
+        throw createError(response, await response.json());
       }
 
       return formatAction('copy', 'end', type, name);

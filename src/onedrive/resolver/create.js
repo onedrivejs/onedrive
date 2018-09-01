@@ -1,5 +1,6 @@
 const { merge } = require('rxjs');
 const ensureDir = require('./ensure-dir');
+const createFetch = require('../fetch');
 const { formatAction } = require('../../utils/format-action');
 
 const createFolder = (refreshToken, name) => {
@@ -7,7 +8,7 @@ const createFolder = (refreshToken, name) => {
 
   return merge(
     formatAction('create', 'start', type, name),
-    ensureDir(refreshToken, name).then(() => formatAction('create', 'end', type, name)),
+    createFetch(refreshToken).then(fetch => ensureDir(fetch, name)).then(() => formatAction('create', 'end', type, name)),
   );
 };
 
