@@ -5,7 +5,7 @@ const { fromFile: hashFromFile } = require('hasha');
 const copy = require('./copy');
 const download = require('./download');
 
-const copyDownloadFile = (directory, name, modified, hash, fromName, downloadUrl) => {
+const copyDownloadFile = (directory, name, modified, hash, fromName, downloder) => {
   const toPath = join(directory, name);
   const fromPath = join(directory, fromName);
 
@@ -41,13 +41,13 @@ const copyDownloadFile = (directory, name, modified, hash, fromName, downloadUrl
       }
 
       // Be safe, download the file.
-      return download(directory, name, hash, modified, downloadUrl);
+      return download(directory, name, hash, modified, downloder);
     }),
     catchError((e) => {
       // The file we have been suggested to copy does not exist, so download
       // instead.
       if (e.code === 'ENOENT') {
-        return download(directory, name, hash, modified, downloadUrl);
+        return download(directory, name, hash, modified, downloder);
       }
 
       // Some other error we don't know how to deal with.

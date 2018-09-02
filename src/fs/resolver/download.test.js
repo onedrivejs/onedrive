@@ -16,6 +16,14 @@ jest.mock('stream');
 
 hashFromFile.mockResolvedValue('');
 
+const downloader = jest.fn()
+  .mockResolvedValue({
+    ok: true,
+    body: {
+      pipe: jest.fn(),
+    },
+  });
+
 const mockStats = jest.fn().mockResolvedValue({});
 stat.mockImplementation((path, options, callback) => {
   if (typeof options === 'function') {
@@ -53,7 +61,7 @@ test('should download file that does not exist', () => {
   const error = new Error();
   error.code = 'ENOENT';
   hashFromFile.mockRejectedValueOnce(error);
-  const result = downloadFile('/data', name, '1234', DateTime.local()).toPromise();
+  const result = downloadFile('/data', name, '1234', DateTime.local(), downloader).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'download',
@@ -73,7 +81,7 @@ test('should download file that throws an error', () => {
 
 test('download file', () => {
   const name = 'test.txt';
-  const result = downloadFile('/data', name, 'abcd', DateTime.local(), 'https://example.com').toPromise();
+  const result = downloadFile('/data', name, 'abcd', DateTime.local(), downloader).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'download',
@@ -84,17 +92,16 @@ test('download file', () => {
 });
 
 test('download file bad response', () => {
-  const downloadUrl = 'https://example.com';
   const response = {
     ok: false,
     status: 404,
-    url: downloadUrl,
+    url: 'https://example.com',
     statusText: 'Not Found',
   };
-  fetch.mockResolvedValueOnce(response);
-  const error = new Error(`${response.status} ${response.statusText} ${downloadUrl}`);
+  downloader.mockResolvedValueOnce(response);
+  const error = new Error(`${response.status} ${response.statusText} ${response.url}`);
   const name = 'test.txt';
-  const result = downloadFile('/data', name, 'abcd', DateTime.local(), downloadUrl).toPromise();
+  const result = downloadFile('/data', name, 'abcd', DateTime.local(), downloader).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'download',
@@ -111,7 +118,7 @@ test('download file will override', () => {
   error.originalError.code = 'EEXIST';
   promisePipe.mockRejectedValueOnce(error);
   const name = 'test.txt';
-  const result = downloadFile('/data', name, 'abcd', DateTime.local(), 'https://example.com').toPromise();
+  const result = downloadFile('/data', name, 'abcd', DateTime.local(), downloader).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'download',
@@ -125,7 +132,7 @@ test('download file will throw error', () => {
   const error = new Error();
   promisePipe.mockRejectedValueOnce(error);
   const name = 'test.txt';
-  const result = downloadFile('/data', name, 'abcd', DateTime.local(), 'https://example.com').toPromise();
+  const result = downloadFile('/data', name, 'abcd', DateTime.local(), downloader).toPromise();
 
   return expect(result).rejects.toEqual(error);
 });

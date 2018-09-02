@@ -33,7 +33,7 @@ const resolver = (directory) => {
 
         // Download files that have been added or changed.
         if (['add', 'change'].includes(data.action) && data.type === 'file') {
-          return downloadFile(directory, data.name, data.hash, data.modified, data.downloadUrl);
+          return downloadFile(directory, data.name, data.hash, data.modified, data.download);
         }
 
         // Anything can be moved.
@@ -51,7 +51,7 @@ const resolver = (directory) => {
             data.modified,
             data.hash,
             data.from,
-            data.downloadUrl,
+            data.download,
           );
         }
 

@@ -7,7 +7,6 @@ const fs = require('fs');
 const { DateTime } = require('luxon');
 const { promisify } = require('util');
 const promisePipe = require('promisepipe');
-const fetch = require('node-fetch');
 const { PassThrough } = require('stream');
 const createError = require('../../utils/error');
 const { formatAction } = require('../../utils/format-action');
@@ -45,7 +44,7 @@ const shouldDownloadFile = async (directory, name, hash, modified) => {
   return true;
 };
 
-const downloadFile = (directory, name, hash, modified, downloadUrl) => {
+const downloadFile = (directory, name, hash, modified, downloader) => {
   const type = 'file';
   const path = join(directory, name);
 
@@ -58,7 +57,7 @@ const downloadFile = (directory, name, hash, modified, downloadUrl) => {
       return merge(
         formatAction('download', 'start', type, name),
         Promise.resolve().then(async () => {
-          const response = await fetch(downloadUrl);
+          const response = await downloader();
 
           if (!response.ok) {
             return formatAction('download', createError(response), type, name);
