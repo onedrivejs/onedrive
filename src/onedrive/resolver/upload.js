@@ -5,8 +5,7 @@ const {
   EMPTY,
 } = require('rxjs');
 const { flatMap } = require('rxjs/operators');
-const { join, dirname, basename } = require('path');
-const { createReadStream } = require('fs');
+const { dirname, basename } = require('path');
 const { DateTime } = require('luxon');
 const getParentId = require('./parent');
 const fetchItem = require('./item');
@@ -77,7 +76,7 @@ const getUploadUrl = async (fetch, name) => {
   return data.uploadUrl;
 };
 
-const uploadFile = (directory, refreshToken, name, hash, modified, size) => {
+const uploadFile = (refreshToken, name, hash, modified, size, content) => {
   const type = 'file';
 
   const progress = new Subject();
@@ -150,7 +149,7 @@ const uploadFile = (directory, refreshToken, name, hash, modified, size) => {
                 'Content-Length': end - start + 1,
                 'Content-Range': `bytes ${start}-${end}/${size}`,
               },
-              body: createReadStream(join(directory, name), {
+              body: content({
                 start,
                 end,
               }),

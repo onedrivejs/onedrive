@@ -23,10 +23,12 @@ const fetch = jest.fn()
 createFetch.mockResolvedValue(fetch);
 fetchItem.mockImplementation(fetch);
 
+const content = jest.fn();
+
 
 test('upload file', () => {
   const name = 'test.txt';
-  const result = uploadFile('/tmp', '1234', 'test.txt', 'abcd', DateTime.local(), 128).toPromise();
+  const result = uploadFile('1234', 'test.txt', 'abcd', DateTime.local(), 128, content).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'upload',
@@ -38,7 +40,7 @@ test('upload file', () => {
 
 test('upload file large', () => {
   const name = 'test.txt';
-  const result = uploadFile('/tmp', '1234', name, 'abcd', DateTime.local(), 104857600).toPromise();
+  const result = uploadFile('1234', name, 'abcd', DateTime.local(), 104857600, content).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'upload',
@@ -50,7 +52,7 @@ test('upload file large', () => {
 
 test('upload file large file subdirectory', () => {
   const name = 'test/test.txt';
-  const result = uploadFile('/tmp', '1234', name, 'abcd', DateTime.local(), 104857600).toPromise();
+  const result = uploadFile('1234', name, 'abcd', DateTime.local(), 104857600, content).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'upload',
@@ -69,7 +71,7 @@ test('upload file that has a matching hash', () => {
       },
     },
   });
-  const result = uploadFile('/tmp', '1234', 'test.txt', hash, DateTime.local(), 128).toPromise();
+  const result = uploadFile('1234', 'test.txt', hash, DateTime.local(), 128, content).toPromise();
 
   return expect(result).resolves.toBeUndefined();
 });
@@ -82,7 +84,7 @@ test('upload file that does not yet exist', () => {
   });
 
   const name = 'test.txt';
-  const result = uploadFile('/tmp', '1234', 'test.txt', 'abcd', DateTime.local(), 128).toPromise();
+  const result = uploadFile('1234', 'test.txt', 'abcd', DateTime.local(), 128, content).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'upload',
@@ -106,7 +108,7 @@ test('upload file that fails to retrieve stats', () => {
   const error = new Error(`${data.status} ${data.statusText} ${url}`);
   error.data = data;
 
-  const result = uploadFile('/tmp', '1234', 'test.txt', 'abcd', DateTime.local(), 128).toPromise();
+  const result = uploadFile('1234', 'test.txt', 'abcd', DateTime.local(), 128, content).toPromise();
 
   return expect(result).rejects.toEqual(error);
 });
@@ -126,7 +128,7 @@ test('upload file that fails to retrieve upload url', () => {
   const error = new Error(`${data.status} ${data.statusText} ${url}`);
   error.data = data;
 
-  const result = uploadFile('/tmp', '1234', name, 'abcd', DateTime.local(), 128).toPromise();
+  const result = uploadFile('1234', name, 'abcd', DateTime.local(), 128, content).toPromise();
 
   return expect(result).rejects.toEqual(error);
 });
@@ -137,7 +139,7 @@ test('upload file that is newer', () => {
     lastModifiedDateTime: DateTime.local().toISO(),
   });
 
-  const result = uploadFile('/tmp', '1234', 'test.txt', hash, DateTime.local().minus({ days: 1 }), 128).toPromise();
+  const result = uploadFile('1234', 'test.txt', hash, DateTime.local().minus({ days: 1 }), 128, content).toPromise();
 
   return expect(result).resolves.toBeUndefined();
 });
@@ -154,7 +156,7 @@ test('upload file failure', () => {
   fetch.mockResolvedValueOnce(mockFetchValue)
     .mockResolvedValueOnce(mockFetchValue)
     .mockResolvedValueOnce(data);
-  const result = uploadFile('/tmp', '1234', 'test.txt', 'abcd', DateTime.local(), 104857600).toPromise();
+  const result = uploadFile('1234', 'test.txt', 'abcd', DateTime.local(), 104857600, content).toPromise();
 
   return expect(result).rejects.toEqual(error);
 });

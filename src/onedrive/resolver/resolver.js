@@ -5,7 +5,7 @@ const uploadFile = require('./upload');
 const move = require('./move');
 const copyUploadFile = require('./copy-upload');
 
-const resolver = (directory, refreshToken) => (
+const resolver = refreshToken => (
   fsStream => (
     fsStream.pipe(
       flatMap((data) => {
@@ -18,12 +18,12 @@ const resolver = (directory, refreshToken) => (
           // @TODO The resolver should just get a readible stream passed in
           //       rather than having to be aware of the filesystem.
           return uploadFile(
-            directory,
             refreshToken,
             data.name,
             data.hash,
             data.modified,
             data.size,
+            data.content,
           );
         }
 
@@ -36,12 +36,12 @@ const resolver = (directory, refreshToken) => (
         // be copied.
         if (data.type === 'file' && data.action === 'copy') {
           return copyUploadFile(
-            directory,
             refreshToken,
             data.name,
             data.hash,
             data.modified,
             data.size,
+            data.content,
             data.from,
           );
         }

@@ -12,12 +12,14 @@ jest.mock('./upload');
 jest.mock('./move');
 jest.mock('./copy-upload');
 
+const content = jest.fn();
+
 createFolder.mockImplementation((refreshToken, name) => from([
   formatAction('create', 'start', 'folder', name),
   formatAction('create', 'end', 'folder', name),
 ]));
 
-uploadFile.mockImplementation((directory, refreshToken, name) => from([
+uploadFile.mockImplementation((refreshToken, name) => from([
   formatAction('upload', 'start', 'file', name),
   formatAction('upload', 'end', 'file', name),
 ]));
@@ -27,7 +29,7 @@ move.mockImplementation((refreshToken, type, name) => from([
   formatAction('move', 'end', type, name),
 ]));
 
-copyUploadFile.mockImplementation((directory, refreshToken, name) => from([
+copyUploadFile.mockImplementation((refreshToken, name) => from([
   formatAction('copy', 'start', 'file', name),
   formatAction('copy', 'end', 'file', name),
 ]));
@@ -53,6 +55,7 @@ test('resolver add folder', () => {
   fsStream.next({
     ...data,
     action: 'add',
+    content,
   });
 
   return expect(result).resolves.toEqual([
@@ -88,6 +91,7 @@ test('resolver upload file', () => {
   fsStream.next({
     ...data,
     action: 'add',
+    content,
   });
 
   return expect(result).resolves.toEqual([
@@ -122,6 +126,7 @@ test('resolver move file', () => {
   });
   fsStream.next({
     ...data,
+    content,
   });
 
   return expect(result).resolves.toEqual([
@@ -154,7 +159,10 @@ test('resolver copy file', () => {
     action: 'test',
     type: 'file',
   });
-  fsStream.next(data);
+  fsStream.next({
+    ...data,
+    content,
+  });
 
   return expect(result).resolves.toEqual([
     {

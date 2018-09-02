@@ -6,7 +6,7 @@ const createFetch = require('../fetch');
 const fetchItem = require('./item');
 const createError = require('../../utils/error');
 
-const copyUploadFile = (directory, refreshToken, name, hash, modified, size, fromName) => {
+const copyUploadFile = (refreshToken, name, hash, modified, size, content, fromName) => {
   const item = Promise.resolve().then(async () => {
     const fetch = await createFetch(refreshToken);
 
@@ -24,7 +24,7 @@ const copyUploadFile = (directory, refreshToken, name, hash, modified, size, fro
         // The file we have been suggested to copy does not exist, so upload
         // instead.
         if (fromResponse.status === 404) {
-          return upload(directory, refreshToken, name, hash, modified, size);
+          return upload(refreshToken, name, hash, modified, size, content);
         }
 
         // Some other error we don't know how to deal with.
@@ -65,7 +65,7 @@ const copyUploadFile = (directory, refreshToken, name, hash, modified, size, fro
       }
 
       // Be safe, upload the file.
-      return upload(directory, refreshToken, name, hash, modified, size);
+      return upload(refreshToken, name, hash, modified, size, content);
     }),
   );
 };

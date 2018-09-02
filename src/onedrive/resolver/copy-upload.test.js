@@ -30,7 +30,7 @@ createFetch.mockResolvedValue(fetch);
 fetchItem.mockImplementation(fetch);
 
 test('copy upload file', () => {
-  const result = copyUploadFile('/tmp', '1234', 'test2.txt', 'abcd', DateTime.local(), 128, 'test.txt').toPromise();
+  const result = copyUploadFile('1234', 'test2.txt', 'abcd', DateTime.local(), 128, 'test.txt').toPromise();
 
   return expect(result).resolves.toBeFalsy();
 });
@@ -41,7 +41,7 @@ test('copy upload file from not found', () => {
     status: 404,
     json,
   });
-  const result = copyUploadFile('/tmp', '1234', 'test2.txt', 'abcd', DateTime.local(), 128, 'test.txt').toPromise();
+  const result = copyUploadFile('1234', 'test2.txt', 'abcd', DateTime.local(), 128, 'test.txt').toPromise();
 
   return expect(result).resolves.toBeFalsy();
 });
@@ -59,7 +59,7 @@ test('copy upload file from error', () => {
   const error = new Error(`${data.status} ${data.statusText} ${data.url}`);
   error.data = data;
 
-  const result = copyUploadFile('/tmp', '1234', 'test2.txt', 'abcd', DateTime.local(), 128, 'test.txt').toPromise();
+  const result = copyUploadFile('1234', 'test2.txt', 'abcd', DateTime.local(), 128, 'test.txt').toPromise();
 
   return expect(result).rejects.toEqual(error);
 });
@@ -71,7 +71,7 @@ test('copy upload file to not found', () => {
     status: 404,
     json,
   });
-  const result = copyUploadFile('/tmp', '1234', 'test2.txt', 'abcd', DateTime.local(), 128, 'test.txt').toPromise();
+  const result = copyUploadFile('1234', 'test2.txt', 'abcd', DateTime.local(), 128, 'test.txt').toPromise();
 
   return expect(result).resolves.toBeTruthy();
 });
@@ -90,7 +90,7 @@ test('copy upload file from error', () => {
   const error = new Error(`${data.status} ${data.statusText} ${data.url}`);
   error.data = data;
 
-  const result = copyUploadFile('/tmp', '1234', 'test2.txt', 'abcd', DateTime.local(), 128, 'test.txt').toPromise();
+  const result = copyUploadFile('1234', 'test2.txt', 'abcd', DateTime.local(), 128, 'test.txt').toPromise();
 
   return expect(result).rejects.toEqual(error);
 });
@@ -104,7 +104,7 @@ test('copy upload file has same hash as filesystem', () => {
       },
     },
   });
-  const result = copyUploadFile('/tmp', '1234', 'test2.txt', hash, DateTime.local(), 128, 'test.txt').toPromise();
+  const result = copyUploadFile('1234', 'test2.txt', hash, DateTime.local(), 128, 'test.txt').toPromise();
 
   return expect(result).resolves.toBeTruthy();
 });
@@ -120,7 +120,7 @@ test('copy upload file unnecessary copy', () => {
   };
   json.mockResolvedValueOnce(data);
   json.mockResolvedValueOnce(data);
-  const result = copyUploadFile('/tmp', '1234', 'test2.txt', hash, DateTime.local(), 128, 'test.txt').toPromise();
+  const result = copyUploadFile('1234', 'test2.txt', hash, DateTime.local(), 128, 'test.txt').toPromise();
 
   return expect(result).resolves.toBeUndefined();
 });

@@ -1,37 +1,43 @@
 const { fromEvent, from } = require('rxjs');
 const { DateTime } = require('luxon');
 const { flatMap, map, filter } = require('rxjs/operators');
+const { join } = require('path');
+const createContent = require('./content');
 
-const formatAction = (action, file) => {
-  let type;
+const createFormatAction = directory => (
+  (action, file) => {
+    let type;
 
-  switch (file.type) {
-    case 'f':
-      type = 'file';
-      break;
-    case 'd':
-      type = 'folder';
-      break;
-    default:
-      // @TODO remove types onedrive doesn't support!
-      type = '';
-      break;
+    switch (file.type) {
+      case 'f':
+        type = 'file';
+        break;
+      case 'd':
+        type = 'folder';
+        break;
+      default:
+        // @TODO remove types onedrive doesn't support!
+        type = '';
+        break;
+    }
+
+    return {
+      action,
+      id: file.ino,
+      type,
+      name: file.name,
+      modified: file.mtime_ms ? DateTime.fromMillis(file.mtime_ms) : null,
+      size: file.size,
+      content: createContent(join(directory, file.name)),
+      hash: typeof file['content.sha1hex'] === 'string' ? file['content.sha1hex'] : null,
+    };
   }
-
-  return {
-    action,
-    id: file.ino,
-    type,
-    name: file.name,
-    modified: file.mtime_ms ? DateTime.fromMillis(file.mtime_ms) : null,
-    size: file.size,
-    hash: typeof file['content.sha1hex'] === 'string' ? file['content.sha1hex'] : null,
-  };
-};
+);
 
 const stream = (client, directory) => {
   const adding = new Set();
   const hashes = new Map();
+  const formatAction = createFormatAction(directory);
 
   client.command(['subscribe', directory, 'onedrive', {
     // Exclude files and folders that begin with .
