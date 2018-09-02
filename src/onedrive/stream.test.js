@@ -2,15 +2,15 @@ const { Subject } = require('rxjs');
 const { take } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const createStream = require('./stream');
-const downloadFactory = require('./download');
+const createDownload = require('./download');
 const delta = require('./delta');
 
 jest.mock('./delta');
 jest.mock('./download');
 
 const fetch = jest.fn().mockResolvedValue({});
-const createDownload = jest.fn().mockReturnValue(fetch);
-downloadFactory.mockReturnValue(createDownload);
+const downloader = jest.fn().mockReturnValue(fetch);
+createDownload.mockReturnValue(downloader);
 
 test('creating a filesystem stream', () => {
   const subject = new Subject();
@@ -70,7 +70,7 @@ test('add event', () => {
       type: 'file',
       name: 'test/test.jpg',
       hash: 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
-      download: fetch,
+      download: downloader,
     },
   ]);
 });
@@ -133,7 +133,7 @@ test('change event', () => {
     type: 'file',
     name: 'test/test.jpg',
     hash: 'abcdef',
-    download: fetch,
+    download: downloader,
   });
 });
 
@@ -234,7 +234,7 @@ test('move event', () => {
     type: 'file',
     name: 'test/test2.jpg',
     hash: 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
-    download: fetch,
+    download: downloader,
     oldName: 'test/test.jpg',
   });
 });
@@ -275,7 +275,7 @@ test('copy event', () => {
     name: 'test/test2.jpg',
     from: 'test/test.jpg',
     hash: 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
-    download: fetch,
+    download: downloader,
   });
 });
 

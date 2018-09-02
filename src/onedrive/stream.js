@@ -2,36 +2,31 @@ const { map } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const { join } = require('path');
 const delta = require('./delta');
-const downloadFactory = require('./download');
+const createDownload = require('./download');
 
-const createFormatAction = (refreshToken) => {
-  const createDownload = downloadFactory(refreshToken);
+const formatAction = (action, file, name, hash) => {
+  let type;
+  if ('file' in file) {
+    type = 'file';
+  } else if ('folder' in file) {
+    type = 'folder';
+  } else {
+    throw new Error('Unhandled item type');
+  }
 
-  return (action, file, name, hash) => {
-    let type;
-    if ('file' in file) {
-      type = 'file';
-    } else if ('folder' in file) {
-      type = 'folder';
-    } else {
-      throw new Error('Unhandled item type');
-    }
-
-    return {
-      action,
-      id: file.id,
-      type,
-      name,
-      modified: file.lastModifiedDateTime ? DateTime.fromISO(file.lastModifiedDateTime) : null,
-      hash,
-      download: file['@microsoft.graph.downloadUrl'] ? createDownload(file['@microsoft.graph.downloadUrl']) : null,
-    };
+  return {
+    action,
+    id: file.id,
+    type,
+    name,
+    modified: file.lastModifiedDateTime ? DateTime.fromISO(file.lastModifiedDateTime) : null,
+    hash,
+    download: file['@microsoft.graph.downloadUrl'] ? createDownload(file['@microsoft.graph.downloadUrl']) : null,
   };
 };
 
 const stream = (refreshToken) => {
   const files = new Map();
-  const formatAction = createFormatAction(refreshToken);
 
   return delta(refreshToken).pipe(
     map((file) => {

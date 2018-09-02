@@ -1,12 +1,7 @@
-const createFetch = require('./fetch');
+const fetch = require('node-fetch');
 
-const createDownload = refreshToken => (
-  url => (
-    async (options) => {
-      const fetch = await createFetch(refreshToken);
-      return fetch(url, options);
-    }
-  )
+const createDownload = url => (
+  options => fetch(url, options)
 );
 
 module.exports = createDownload;

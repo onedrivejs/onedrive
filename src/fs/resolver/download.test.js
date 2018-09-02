@@ -1,8 +1,6 @@
 const { DateTime } = require('luxon');
 const { stat, utimes } = require('fs');
 const { fromFile: hashFromFile } = require('hasha');
-const fetch = require('node-fetch');
-const { Readable } = require('stream');
 const promisePipe = require('promisepipe');
 const downloadFile = require('./download');
 
@@ -10,7 +8,6 @@ jest.mock('fs');
 jest.mock('graceful-fs', () => jest.mock('fs'));
 jest.mock('fs-extra');
 jest.mock('hasha');
-jest.mock('node-fetch');
 jest.mock('promisepipe');
 jest.mock('stream');
 
@@ -33,11 +30,6 @@ stat.mockImplementation((path, options, callback) => {
   return callback(undefined, mockStats());
 });
 utimes.mockImplementation((path, atime, mtime, callback) => callback(undefined));
-
-fetch.mockResolvedValue({
-  ok: true,
-  body: new Readable(),
-});
 
 test('should download file with identical hash', () => {
   hashFromFile.mockResolvedValueOnce('1234');
