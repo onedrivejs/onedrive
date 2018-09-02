@@ -16,8 +16,6 @@ const resolver = refreshToken => (
 
         // Upload files that have been added or changed.
         if (data.type === 'file' && ['add', 'change'].includes(data.action)) {
-          // @TODO The resolver should just get a readible stream passed in
-          //       rather than having to be aware of the filesystem.
           return uploadFile(
             refreshToken,
             data.name,
