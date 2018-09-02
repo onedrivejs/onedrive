@@ -4,6 +4,7 @@ const createFolder = require('./create');
 const uploadFile = require('./upload');
 const move = require('./move');
 const copyUploadFile = require('./copy-upload');
+const remove = require('./remove');
 
 const resolver = refreshToken => (
   fsStream => (
@@ -44,6 +45,12 @@ const resolver = refreshToken => (
             data.content,
             data.from,
           );
+        }
+
+        // Anything can be removed, but it may no longer exist if the parent
+        // was removed.
+        if (data.action === 'remove') {
+          return remove(refreshToken, data.type, data.name);
         }
 
         return EMPTY;

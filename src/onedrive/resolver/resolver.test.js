@@ -6,11 +6,13 @@ const uploadFile = require('./upload');
 const move = require('./move');
 const resolver = require('./resolver');
 const copyUploadFile = require('./copy-upload');
+const remove = require('./remove');
 
 jest.mock('./create');
 jest.mock('./upload');
 jest.mock('./move');
 jest.mock('./copy-upload');
+jest.mock('./remove');
 
 const content = jest.fn();
 
@@ -32,6 +34,11 @@ move.mockImplementation((refreshToken, type, name) => from([
 copyUploadFile.mockImplementation((refreshToken, name) => from([
   formatAction('copy', 'start', 'file', name),
   formatAction('copy', 'end', 'file', name),
+]));
+
+remove.mockImplementation((refreshToken, type, name) => from([
+  formatAction('remove', 'start', type, name),
+  formatAction('remove', 'end', type, name),
 ]));
 
 test('resolver add folder', () => {
@@ -151,6 +158,41 @@ test('resolver copy file', () => {
 
   const data = {
     action: 'copy',
+    type: 'file',
+    name: 'test.txt',
+  };
+
+  fsStream.next({
+    action: 'test',
+    type: 'file',
+  });
+  fsStream.next({
+    ...data,
+    content,
+  });
+
+  return expect(result).resolves.toEqual([
+    {
+      ...data,
+      phase: 'start',
+    },
+    {
+      ...data,
+      phase: 'end',
+    },
+  ]);
+});
+
+test('resolver remove file', () => {
+  const fsStream = new Subject();
+  const oneDriveResolver = resolver('abcd')(fsStream);
+  const result = Promise.all([
+    oneDriveResolver.pipe(take(1)).toPromise(),
+    oneDriveResolver.pipe(take(2)).toPromise(),
+  ]);
+
+  const data = {
+    action: 'remove',
     type: 'file',
     name: 'test.txt',
   };
