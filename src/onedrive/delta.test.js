@@ -6,6 +6,7 @@ const createFetch = require('./fetch');
 
 jest.mock('node-fetch');
 jest.mock('./fetch');
+jest.mock('../utils/logger');
 jest.useFakeTimers();
 
 beforeEach(() => {

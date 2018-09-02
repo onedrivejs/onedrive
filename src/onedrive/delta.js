@@ -10,6 +10,8 @@ const {
   delay,
 } = require('rxjs/operators');
 const createFetch = require('./fetch');
+const createError = require('../utils/error');
+const { log } = require('../utils/logger');
 
 const delta = (refreshToken) => {
   const nextLink = new BehaviorSubject('https://graph.microsoft.com/v1.0/me/drive/root/delta');
@@ -23,7 +25,7 @@ const delta = (refreshToken) => {
         .then(fetch => fetch(url))
         .then((response) => {
           if (!response.ok) {
-            console.error(response.status, response.statusText, url);
+            log('warn', createError(response));
             return Promise.resolve({
               '@odata.deltaLink': url,
             });

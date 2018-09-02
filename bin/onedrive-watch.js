@@ -7,6 +7,7 @@ const creatFsStream = require('../src/fs/stream');
 const fsResolver = require('../src/fs/resolver/resolver');
 const createOneDriveStream = require('../src/onedrive/stream');
 const oneDriveResolver = require('../src/onedrive/resolver/resolver');
+const { log, logAction } = require('../src/utils/logger');
 
 dotenv.load();
 
@@ -17,7 +18,7 @@ program
 
 const watch = () => {
   if (typeof program.args[0] === 'undefined') {
-    console.error('Directory argument is missing');
+    log('error', 'Directory argument is missing');
     return process.exit(1);
   }
 
@@ -27,7 +28,7 @@ const watch = () => {
   } else if (program.refreshToken) {
     ({ refreshToken } = program);
   } else {
-    console.error('No OneDrive Refresh Token Available. Create one by executing: onedrive auth');
+    log('error', 'No OneDrive Refresh Token Available. Create one by executing: onedrive auth');
     return process.exit(1);
   }
 
@@ -36,14 +37,22 @@ const watch = () => {
   createOneDriveStream(refreshToken).pipe(
     fsResolver(directory),
   ).subscribe((data) => {
-    console.log('FILESYSTEM', data);
+    logAction({
+      ...data,
+      system: 'fs',
+    });
   });
 
   creatFsStream(new Client(), directory).pipe(
     oneDriveResolver(refreshToken),
   ).subscribe((data) => {
-    console.log('ONEDRIVE', data);
+    logAction({
+      ...data,
+      system: 'onedrive',
+    });
   });
+
+  return true;
 };
 
 // Enagage
