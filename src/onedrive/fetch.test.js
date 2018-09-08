@@ -4,6 +4,7 @@ const client = require('./client');
 
 jest.mock('node-fetch');
 jest.mock('./client');
+jest.mock('../utils/logger');
 
 client.accessToken.create.mockReturnValue({
   refresh: jest.fn().mockReturnValue({
@@ -13,6 +14,12 @@ client.accessToken.create.mockReturnValue({
   }),
 });
 
+const mockResponse = {
+  ok: true,
+};
+
+nodeFetch.mockResolvedValue(mockResponse);
+
 test('returns a function', () => {
   const fetch = createFetch('1234');
 
@@ -20,11 +27,30 @@ test('returns a function', () => {
 });
 
 test('returns a response object', () => {
-  const data = {
-    ok: true,
-  };
-  nodeFetch.mockReturnValueOnce(data);
   const response = createFetch('1234').then(fetch => fetch('https://example.com'));
 
-  return expect(response).resolves.toEqual(data);
+  return expect(response).resolves.toEqual(mockResponse);
+});
+
+test('retries after 429', () => {
+  const headers = new Map();
+  headers.set('Retry-After', 1);
+  nodeFetch.mockResolvedValueOnce({
+    status: 429,
+    headers,
+  });
+  nodeFetch.mockResolvedValueOnce(mockResponse);
+  const response = createFetch('1234').then(fetch => fetch('https://example.com'));
+
+  return expect(response).resolves.toEqual(mockResponse);
+});
+
+test('retries after 500', () => {
+  nodeFetch.mockResolvedValueOnce({
+    status: 500,
+  });
+  nodeFetch.mockResolvedValueOnce(mockResponse);
+  const response = createFetch('1234').then(fetch => fetch('https://example.com'));
+
+  return expect(response).resolves.toEqual(mockResponse);
 });
