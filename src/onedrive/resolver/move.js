@@ -18,6 +18,7 @@ const moveItem = (refreshToken, type, name, oldName) => (
         const error = createError(response, data);
 
         // No file to move.
+        // @TODO Then upload!
         if (response.status === 404) {
           return formatAction('move', error, type, name);
         }

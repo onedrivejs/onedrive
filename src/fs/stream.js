@@ -2,6 +2,7 @@ const { fromEvent, from } = require('rxjs');
 const { DateTime } = require('luxon');
 const { flatMap, map, filter } = require('rxjs/operators');
 const { join } = require('path');
+const { log } = require('../utils/logger');
 const createContent = require('./content');
 
 const createFormatAction = directory => (
@@ -43,7 +44,12 @@ const stream = (client, directory) => {
     // Exclude files and folders that begin with .
     expression: ['allof', ['match', '**'], ['match', '**', 'wholename']],
     fields: ['name', 'ino', 'content.sha1hex', 'type', 'exists', 'new', 'mtime_ms', 'size'],
-  }]);
+  }], (error) => {
+    if (error) {
+      log('error', 'Error initiating watch:', error);
+      process.exit(1);
+    }
+  });
 
   // Debug
   // return fromEvent(client, 'subscription');

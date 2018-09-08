@@ -20,6 +20,7 @@ const copyFile = (refreshToken, name, fromName) => {
         const error = createError(response, data);
 
         // No file to copy.
+        // @TODO Then upload!
         if (response.status === 404) {
           return formatAction('copy', error, type, name);
         }

@@ -20,6 +20,7 @@ const moveItem = (directory, type, name, oldName) => {
         return formatAction('move', 'end', type, name);
       } catch (error) {
         // No such file or directory.
+        // @TODO Then download!
         if (error.code === 'ENOENT') {
           return formatAction('move', error, type, name);
         }
