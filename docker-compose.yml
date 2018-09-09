@@ -1,7 +1,6 @@
 version: '3'
 services:
   watch:
-    build: ./
     image: onedrivejs/onedrive
     env_file:
       - .env
