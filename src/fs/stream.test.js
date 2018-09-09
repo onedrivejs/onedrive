@@ -7,16 +7,29 @@ const createStream = require('./stream');
 jest.mock('fb-watchman');
 jest.mock('./content');
 
+const command = jest.fn();
+const exit = jest.spyOn(process, 'exit').mockImplementation(number => number);
+const consoleError = jest.spyOn(console, 'error').mockImplementation(error => error);
+
 Client.mockImplementation(() => {
   const mockClient = new EventEmitter();
-  mockClient.command = jest.fn();
+  mockClient.command = command;
   return mockClient;
 });
 
 test('creating a filesystem stream', () => {
+  command.mockImplementationOnce((options, callback) => callback(undefined));
   const stream = createStream(new Client(), 'data');
 
   expect(stream).toBeDefined();
+});
+
+test('creating a filesystem stream error', () => {
+  command.mockImplementationOnce((options, callback) => callback(new Error()));
+  createStream(new Client(), 'data');
+
+  expect(exit).toHaveBeenCalledWith(1);
+  expect(consoleError).toHaveBeenCalled();
 });
 
 test('add event', () => {

@@ -5,7 +5,6 @@ ENV ONEDRIVE_REFRESH_TOKEN=""
 
 # System Dependencies.
 RUN apt-get update && apt-get install -y \
-		inotify-tools \
 		python-dev \
 	--no-install-recommends && rm -r /var/lib/apt/lists/*
 

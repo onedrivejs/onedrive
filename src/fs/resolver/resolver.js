@@ -11,7 +11,7 @@ const {
 const createFolder = require('./create');
 const downloadFile = require('./download');
 const copyDownloadFile = require('./copy-download');
-const move = require('./move');
+const moveDownload = require('./move-download');
 const remove = require('./remove');
 const cleanTrash = require('./clean');
 
@@ -38,7 +38,15 @@ const resolver = (directory) => {
 
         // Anything can be moved.
         if (data.action === 'move') {
-          return move(directory, data.type, data.name, data.oldName);
+          return moveDownload(
+            directory,
+            data.type,
+            data.name,
+            data.modified,
+            data.hash,
+            data.from,
+            data.download,
+          );
         }
 
         // If a directory is copied, all of the files in that directory are copied

@@ -1,12 +1,14 @@
-const { from, EMPTY } = require('rxjs');
+const { from, merge } = require('rxjs');
 const { flatMap } = require('rxjs/operators');
-const copy = require('./copy');
+const createFolder = require('./create');
+const move = require('./move');
 const upload = require('./upload');
+const remove = require('./remove');
 const createFetch = require('../fetch');
 const fetchItem = require('./item');
 const createError = require('../../utils/error');
 
-const copyUploadFile = (refreshToken, name, hash, modified, size, content, fromName) => {
+const moveUpload = (refreshToken, type, name, hash, modified, size, content, fromName) => {
   const item = Promise.resolve().then(async () => {
     const fetch = await createFetch(refreshToken);
 
@@ -24,6 +26,10 @@ const copyUploadFile = (refreshToken, name, hash, modified, size, content, fromN
         // The file we have been suggested to copy does not exist, so upload
         // instead.
         if (fromResponse.status === 404) {
+          if (type === 'folder') {
+            return createFolder(refreshToken, name);
+          }
+
           return upload(refreshToken, name, hash, modified, size, content);
         }
 
@@ -32,13 +38,18 @@ const copyUploadFile = (refreshToken, name, hash, modified, size, content, fromN
       }
 
       if (!toResponse.ok) {
-        // If we are not overriding an existing file, it is safe to copy.
+        // If we are not overriding an existing file, it is safe to move.
         if (toResponse.status === 404) {
-          return copy(refreshToken, name, fromData.id);
+          return move(refreshToken, type, name, fromData.id);
         }
 
         // Some other error we don't know how to deal with.
         throw createError(toResponse, toData);
+      }
+
+      // If this is a folder, at this point, it's safe to move.
+      if (type === 'folder') {
+        return move(refreshToken, type, name, fromData.id);
       }
 
       const fromHash = fromData && fromData.file && fromData.file.hashes
@@ -50,24 +61,27 @@ const copyUploadFile = (refreshToken, name, hash, modified, size, content, fromN
 
       // The hash from the filesystem matches the suggested file to copy.
       if (hash === fromHash) {
-        // Ensure that the copy is necessary. If we are overriding a file,
-        // and that file has the same hash that we would be copying or
+        // Ensure that the move is necessary. If we are overriding a file,
+        // and that file has the same hash that we would be moving or
         // uploading, then there is no need to copy the file and we should
-        // die here.
+        // remove the from file.
         if (fromHash === toHash) {
-          return EMPTY;
+          return remove(refreshToken, type, fromName);
         }
 
-        // Copying is safe. This means that the file we are copying from
+        // Moving is safe. This means that the file we are copying from
         // has the same hash as the file we would upload, and the file
         // we are overriding has a different hash.
-        return copy(refreshToken, name, fromData.id);
+        return move(refreshToken, type, name, fromData.id);
       }
 
       // Be safe, upload the file.
-      return upload(refreshToken, name, hash, modified, size, content);
+      return merge(
+        upload(refreshToken, name, hash, modified, size, content),
+        remove(refreshToken, type, fromName),
+      );
     }),
   );
 };
 
-module.exports = copyUploadFile;
+module.exports = moveUpload;

@@ -24,7 +24,6 @@ const copyFile = (directory, name, fromName) => {
         return formatAction('copy', 'end', type, name);
       } catch (error) {
         // No such file or directory.
-        // @TODO Then download!
         if (error.code === 'ENOENT') {
           return formatAction('copy', error, type, name);
         }

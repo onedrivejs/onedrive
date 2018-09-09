@@ -2,7 +2,7 @@ const { EMPTY } = require('rxjs');
 const { flatMap } = require('rxjs/operators');
 const createFolder = require('./create');
 const uploadFile = require('./upload');
-const move = require('./move');
+const moveUpload = require('./move-upload');
 const copyUploadFile = require('./copy-upload');
 const remove = require('./remove');
 
@@ -27,7 +27,16 @@ const resolver = refreshToken => (
         }
 
         if (data.action === 'move') {
-          return move(refreshToken, data.type, data.name, data.oldName);
+          return moveUpload(
+            refreshToken,
+            data.type,
+            data.name,
+            data.hash,
+            data.modified,
+            data.size,
+            data.content,
+            data.from,
+          );
         }
 
         // If a directory is copied, all of the files in that directory are

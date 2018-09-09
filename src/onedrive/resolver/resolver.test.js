@@ -3,14 +3,14 @@ const { take } = require('rxjs/operators');
 const { formatAction } = require('../../utils/format-action');
 const createFolder = require('./create');
 const uploadFile = require('./upload');
-const move = require('./move');
+const moveUpload = require('./move-upload');
 const resolver = require('./resolver');
 const copyUploadFile = require('./copy-upload');
 const remove = require('./remove');
 
 jest.mock('./create');
 jest.mock('./upload');
-jest.mock('./move');
+jest.mock('./move-upload');
 jest.mock('./copy-upload');
 jest.mock('./remove');
 
@@ -26,7 +26,7 @@ uploadFile.mockImplementation((refreshToken, name) => from([
   formatAction('upload', 'end', 'file', name),
 ]));
 
-move.mockImplementation((refreshToken, type, name) => from([
+moveUpload.mockImplementation((refreshToken, type, name) => from([
   formatAction('move', 'start', type, name),
   formatAction('move', 'end', type, name),
 ]));

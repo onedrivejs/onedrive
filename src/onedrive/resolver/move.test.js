@@ -50,32 +50,6 @@ test('move file subfolder', () => {
   });
 });
 
-test('move file does not exist', () => {
-  const type = 'file';
-  const name = 'test2.txt';
-  const oldName = 'test.txt';
-  const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${oldName}`;
-  const data = {
-    ok: false,
-    status: 404,
-    statusText: 'Not Found',
-    url,
-    json,
-  };
-  fetch.mockResolvedValueOnce(data);
-  const error = new Error(`${data.status} ${data.statusText} ${url}`);
-  error.data = data;
-  const result = move('1234', type, name, oldName).toPromise();
-
-  return expect(result).resolves.toEqual({
-    action: 'move',
-    phase: 'error',
-    type,
-    name,
-    error,
-  });
-});
-
 test('move file unkown error', () => {
   const type = 'file';
   const name = 'test2.txt';
@@ -88,48 +62,6 @@ test('move file unkown error', () => {
     url,
     json,
   };
-  fetch.mockResolvedValueOnce(data);
-  const error = new Error(`${data.status} ${data.statusText} ${url}`);
-  error.data = data;
-  const result = move('1234', type, name, oldName).toPromise();
-
-  return expect(result).rejects.toEqual(error);
-});
-
-test('move file root folder error', () => {
-  const type = 'file';
-  const name = 'test2.txt';
-  const oldName = 'test.txt';
-  const url = 'https://graph.microsoft.com/v1.0/me/drive/items/root';
-  const data = {
-    ok: false,
-    status: 500,
-    statusText: 'ERROR',
-    url,
-    json,
-  };
-  fetch.mockResolvedValueOnce(mockFetchValue);
-  fetch.mockResolvedValueOnce(data);
-  const error = new Error(`${data.status} ${data.statusText} ${url}`);
-  error.data = data;
-  const result = move('1234', type, name, oldName).toPromise();
-
-  return expect(result).rejects.toEqual(error);
-});
-
-test('move file error', () => {
-  const type = 'file';
-  const name = 'test2.txt';
-  const oldName = 'test.txt';
-  const url = 'https://graph.microsoft.com/v1.0/me/drive/items/undefined';
-  const data = {
-    ok: false,
-    status: 500,
-    statusText: 'ERROR',
-    url,
-    json,
-  };
-  fetch.mockResolvedValueOnce(mockFetchValue);
   fetch.mockResolvedValueOnce(data);
   const error = new Error(`${data.status} ${data.statusText} ${url}`);
   error.data = data;
