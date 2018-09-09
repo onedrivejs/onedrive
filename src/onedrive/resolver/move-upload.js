@@ -59,17 +59,17 @@ const moveUpload = (refreshToken, type, name, hash, modified, size, content, fro
         ? toData.file.hashes.sha1Hash.toLowerCase()
         : null;
 
-      // The hash from the filesystem matches the suggested file to copy.
+      // The hash from the filesystem matches the suggested file to move.
       if (hash === fromHash) {
         // Ensure that the move is necessary. If we are overriding a file,
         // and that file has the same hash that we would be moving or
-        // uploading, then there is no need to copy the file and we should
+        // uploading, then there is no need to move the file and we should
         // remove the from file.
         if (fromHash === toHash) {
           return remove(refreshToken, type, fromName);
         }
 
-        // Moving is safe. This means that the file we are copying from
+        // Moving is safe. This means that the file we are moving from
         // has the same hash as the file we would upload, and the file
         // we are overriding has a different hash.
         return move(refreshToken, type, name, fromData.id);

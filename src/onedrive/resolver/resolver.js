@@ -35,7 +35,7 @@ const resolver = refreshToken => (
             data.modified,
             data.size,
             data.content,
-            data.from,
+            data.oldName,
           );
         }
 

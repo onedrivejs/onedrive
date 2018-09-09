@@ -44,7 +44,7 @@ const resolver = (directory) => {
             data.name,
             data.modified,
             data.hash,
-            data.from,
+            data.oldName,
             data.download,
           );
         }
