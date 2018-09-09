@@ -5,3 +5,7 @@ services:
     image: onedrivejs/onedrive
     env_file:
       - .env
+    volumes:
+      - data:/data
+volumes:
+  data:
