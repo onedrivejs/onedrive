@@ -1,18 +1,19 @@
 const { merge } = require('rxjs');
 const { basename } = require('path');
 const createFetch = require('../fetch');
-const getParentId = require('./parent');
+const getParent = require('./parent');
 const createError = require('../../utils/error');
 const { formatAction } = require('../../utils/format-action');
 
-const moveItem = (refreshToken, type, name, id) => (
+const moveItem = (refreshToken, type, name, { id, parentReference: { driveId } }) => (
   merge(
     formatAction('move', 'start', type, name),
     Promise.resolve().then(async () => {
       const fetch = await createFetch(refreshToken);
-      const parentId = await getParentId(fetch, name);
+      const { id: parentId, driveId: parentDriveId } = await getParent(fetch, name);
 
-      const url = `https://graph.microsoft.com/v1.0/me/drive/items/${id}`;
+      // @TODO Support shared folders.
+      const url = `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${id}`;
       const response = await fetch(url, {
         method: 'PATCH',
         headers: {
@@ -21,6 +22,7 @@ const moveItem = (refreshToken, type, name, id) => (
         body: JSON.stringify({
           parentReference: {
             id: parentId,
+            driveId: parentDriveId,
           },
           name: basename(name),
         }),

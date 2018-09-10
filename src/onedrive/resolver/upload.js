@@ -7,7 +7,7 @@ const {
 const { flatMap } = require('rxjs/operators');
 const { dirname, basename } = require('path');
 const { DateTime } = require('luxon');
-const getParentId = require('./parent');
+const getParent = require('./parent');
 const fetchItem = require('./item');
 const createFetch = require('../fetch');
 const createError = require('../../utils/error');
@@ -45,14 +45,10 @@ const shouldUploadFile = async (refreshToken, name, hash, modified) => {
 };
 
 const getUploadUrl = async (fetch, name) => {
-  const directory = dirname(name);
   const fileName = basename(name);
-  let parentId = 'root';
-  if (directory !== '.') {
-    parentId = await getParentId(fetch, name);
-  }
+  const parent = await getParent(fetch, name);
 
-  const url = `https://graph.microsoft.com/v1.0/me/drive/items/${parentId}:/${fileName}:/createUploadSession`;
+  const url = `https://graph.microsoft.com/v1.0/drives/${parent.driveId}/items/${parent.id}:/${fileName}:/createUploadSession`;
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -106,7 +102,7 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
             chunks = [
               {
                 start: 0,
-                end: size - 1,
+                end: size > 0 ? size - 1 : 0,
               },
             ];
           } else {
@@ -146,7 +142,7 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
             const response = await fetch(url, {
               method: 'PUT',
               headers: {
-                'Content-Length': end - start + 1,
+                'Content-Length': size > 0 ? end - start + 1 : 0,
                 'Content-Range': `bytes ${start}-${end}/${size}`,
               },
               body: content({

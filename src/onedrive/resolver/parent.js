@@ -2,10 +2,10 @@ const { dirname } = require('path');
 const ensureDir = require('./ensure-dir');
 const createError = require('../../utils/error');
 
-const getParentId = async (fetch, name) => {
+const getParent = async (fetch, name) => {
   const directory = dirname(name);
 
-  let parentId;
+  let parent;
   if (directory === '.') {
     const url = 'https://graph.microsoft.com/v1.0/me/drive/items/root';
     const response = await fetch(url);
@@ -14,12 +14,15 @@ const getParentId = async (fetch, name) => {
       throw createError(response, data);
     }
 
-    parentId = data.id;
+    parent = {
+      id: data.id,
+      driveId: data.parentReference.driveId,
+    };
   } else {
-    parentId = await ensureDir(fetch, directory);
+    parent = await ensureDir(fetch, directory);
   }
 
-  return parentId;
+  return parent;
 };
 
-module.exports = getParentId;
+module.exports = getParent;

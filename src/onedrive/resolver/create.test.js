@@ -10,7 +10,7 @@ const fetch = jest.fn();
 
 createFetch.mockResolvedValue(fetch);
 
-ensureDir.mockResolvedValue('root');
+ensureDir.mockResolvedValue({ id: 'root', driveId: undefined });
 
 test('creates a folder in the root', () => {
   const name = 'test';

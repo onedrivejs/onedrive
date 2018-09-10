@@ -21,9 +21,8 @@ const remove = (refreshToken, type, name) => (
         throw createError(response);
       }
 
-      const { id } = data;
-
-      const url = `https://graph.microsoft.com/v1.0/me/drive/items/${id}`;
+      const { id, parentReference: { driveId } } = data;
+      const url = `https://graph.microsoft.com/v1.0/me/drives/${driveId}/items/${id}`;
       response = await fetch(url, {
         method: 'DELETE',
       });

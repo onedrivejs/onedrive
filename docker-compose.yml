@@ -4,7 +4,7 @@ services:
     image: onedrivejs/onedrive
     env_file:
       - .env
+    build: ./
     volumes:
-      - data:/data
-volumes:
-  data:
+      - ./:/app:cached
+      - ./data:/data:cached

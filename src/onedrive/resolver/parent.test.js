@@ -1,4 +1,4 @@
-const getParentId = require('./parent');
+const getParent = require('./parent');
 
 jest.mock('./ensure-dir');
 
@@ -14,12 +14,12 @@ const fetch = jest.fn()
   .mockResolvedValue(mockFetchValue);
 
 test('get parent id', () => {
-  const result = getParentId(fetch, 'test.txt');
+  const result = getParent(fetch, 'test.txt');
   return expect(result).resolves.toBeUndefined();
 });
 
 test('get parent id subfolder', () => {
-  const result = getParentId(fetch, 'test/test.txt');
+  const result = getParent(fetch, 'test/test.txt');
   return expect(result).resolves.toBeUndefined();
 });
 
@@ -34,7 +34,7 @@ test('get parent id request error', () => {
   const error = new Error(`${data.status} ${data.statusText} ${data.url}`);
   error.data = {};
   fetch.mockResolvedValueOnce(data);
-  const result = getParentId(fetch, 'test.txt');
+  const result = getParent(fetch, 'test.txt');
 
   return expect(result).rejects.toEqual(error);
 });

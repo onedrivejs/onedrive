@@ -2,6 +2,7 @@ const { from, merge } = require('rxjs');
 const { flatMap } = require('rxjs/operators');
 const createFolder = require('./create');
 const move = require('./move');
+const getParent = require('./parent');
 const upload = require('./upload');
 const remove = require('./remove');
 const createFetch = require('../fetch');
@@ -13,15 +14,17 @@ const moveUpload = (refreshToken, type, name, hash, modified, size, content, fro
     const fetch = await createFetch(refreshToken);
 
     return Promise.all([
+      Promise.resolve(fetch),
       fetchItem(fetch, fromName).then(async response => [response, await response.json()]),
       fetchItem(fetch, name).then(async response => [response, await response.json()]),
     ]);
   });
 
   return from(item).pipe(
-    flatMap(([fromFile, toFile]) => {
+    flatMap(([fetch, fromFile, toFile]) => {
       const [fromResponse, fromData] = fromFile;
       const [toResponse, toData] = toFile;
+
       if (!fromResponse.ok) {
         // The file we have been suggested to copy does not exist, so upload
         // instead.
@@ -40,7 +43,20 @@ const moveUpload = (refreshToken, type, name, hash, modified, size, content, fro
       if (!toResponse.ok) {
         // If we are not overriding an existing file, it is safe to move.
         if (toResponse.status === 404) {
-          return move(refreshToken, type, name, fromData.id);
+          return from(getParent(fetch, name)).pipe(
+            flatMap((toParent) => {
+              // OneDrive does not support moving between drives!
+              if (toParent.driveId !== fromData.parentReference.driveId) {
+                return merge(
+                  upload(refreshToken, name, hash, modified, size, content),
+                  remove(refreshToken, type, fromName),
+                );
+              }
+
+              // Safe to move.
+              return move(refreshToken, type, name, fromData);
+            }),
+          );
         }
 
         // Some other error we don't know how to deal with.
@@ -49,7 +65,15 @@ const moveUpload = (refreshToken, type, name, hash, modified, size, content, fro
 
       // If this is a folder, at this point, it's safe to move.
       if (type === 'folder') {
-        return move(refreshToken, type, name, fromData.id);
+        return move(refreshToken, type, name, fromData);
+      }
+
+      // OneDrive does not support moving between drives!
+      if (fromData.parentReference.driveId !== toData.parentReference.driveId) {
+        return merge(
+          upload(refreshToken, name, hash, modified, size, content),
+          remove(refreshToken, type, fromName),
+        );
       }
 
       const fromHash = fromData && fromData.file && fromData.file.hashes
@@ -72,7 +96,7 @@ const moveUpload = (refreshToken, type, name, hash, modified, size, content, fro
         // Moving is safe. This means that the file we are moving from
         // has the same hash as the file we would upload, and the file
         // we are overriding has a different hash.
-        return move(refreshToken, type, name, fromData.id);
+        return move(refreshToken, type, name, fromData);
       }
 
       // Be safe, upload the file.

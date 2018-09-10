@@ -1,20 +1,20 @@
 const { merge } = require('rxjs');
 const { basename } = require('path');
 const createFetch = require('../fetch');
-const getParentId = require('./parent');
+const getParent = require('./parent');
 const createError = require('../../utils/error');
 const { formatAction } = require('../../utils/format-action');
 
-const copyFile = (refreshToken, name, id) => {
+const copyFile = (refreshToken, name, { id, parentReference: { driveId } }) => {
   const type = 'file';
 
   return merge(
     formatAction('copy', 'start', type, name),
     Promise.resolve().then(async () => {
       const fetch = await createFetch(refreshToken);
-      const parentId = await getParentId(fetch, name);
+      const { id: parentId, driveId: parentDriveId } = await getParent(fetch, name);
 
-      const url = `https://graph.microsoft.com/v1.0/me/drive/items/${id}/copy`;
+      const url = `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${id}/copy`;
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -23,6 +23,7 @@ const copyFile = (refreshToken, name, id) => {
         body: JSON.stringify({
           parentReference: {
             id: parentId,
+            driveId: parentDriveId,
           },
           name: basename(name),
         }),

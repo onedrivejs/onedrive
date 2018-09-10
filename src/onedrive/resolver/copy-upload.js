@@ -34,7 +34,7 @@ const copyUploadFile = (refreshToken, name, hash, modified, size, content, fromN
       if (!toResponse.ok) {
         // If we are not overriding an existing file, it is safe to copy.
         if (toResponse.status === 404) {
-          return copy(refreshToken, name, fromData.id);
+          return copy(refreshToken, name, fromData);
         }
 
         // Some other error we don't know how to deal with.
@@ -61,7 +61,7 @@ const copyUploadFile = (refreshToken, name, hash, modified, size, content, fromN
         // Copying is safe. This means that the file we are copying from
         // has the same hash as the file we would upload, and the file
         // we are overriding has a different hash.
-        return copy(refreshToken, name, fromData.id);
+        return copy(refreshToken, name, fromData);
       }
 
       // Be safe, upload the file.

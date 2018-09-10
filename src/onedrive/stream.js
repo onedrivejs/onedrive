@@ -1,4 +1,5 @@
-const { map } = require('rxjs/operators');
+const { of, Subject } = require('rxjs');
+const { flatMap, map } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const { join } = require('path');
 const delta = require('./delta');
@@ -27,21 +28,55 @@ const formatAction = (action, file, name, hash) => {
 
 const stream = (refreshToken) => {
   const files = new Map();
+  const shared = new Map();
 
   return delta(refreshToken).pipe(
+    flatMap((file) => {
+      if ('remoteItem' in file) {
+        const cancel = new Subject();
+        shared.set(file.id, cancel);
+
+        return delta(
+          refreshToken,
+          file.remoteItem.parentReference.driveId,
+          file.remoteItem.id,
+          cancel,
+        ).pipe(
+          // Attach the shared folder name as a namespace.
+          map(f => ({
+            ...f,
+            namespace: file,
+          })),
+        );
+      }
+
+      return of(file);
+    }),
     map((file) => {
       const hash = file.file && file.file.hashes ? file.file.hashes.sha1Hash.toLowerCase() : null;
       const existing = files.get(file.id);
       let { name } = file;
       // Use the name from the parent if it exists.
+      // @TODO What is this? Creating folder drives on File System start
       if (file.parentReference && file.parentReference.path) {
-        name = join(file.parentReference.path, file.name).replace('/drive/root:/', '');
+        // If the namespace remote reference equals the parent reference of the
+        // file, then the file is in the root of the namespace.
+        if (file.namespace && file.namespace.remoteItem.id === file.parentReference.id) {
+          name = join(file.namespace.parentReference.path, file.namespace.name, file.name).replace(/^.*:\//g, '');
+        } else {
+          name = join(file.parentReference.path, file.name).replace(/^.*:\//g, '');
+        }
       } else if (existing) {
         ({ name } = existing);
       }
 
       if ('deleted' in file) {
         files.delete(file.id);
+        // If this is a shared folder, stop the delta.
+        if (shared.get(file.id)) {
+          shared.get(file.id).complete();
+          shared.delete(file.id);
+        }
         return formatAction('remove', file, name, hash);
       }
 
