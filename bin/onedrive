@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 const program = require('commander');
 
+// @TODO Add Sentry!
+
 program
   .version('0.0.1')
   .command('auth', 'authenticate OneDrive and retrieve a refresh token')

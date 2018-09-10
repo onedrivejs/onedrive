@@ -5,7 +5,12 @@ const remove = require('./remove');
 jest.mock('./item');
 jest.mock('../fetch');
 
-const mockJsonValue = {};
+const mockJsonValue = {
+  id: '123',
+  parentReference: {
+    driveId: 'abc',
+  },
+};
 const json = jest.fn()
   .mockResolvedValue(mockJsonValue);
 
@@ -17,7 +22,7 @@ const fetch = jest.fn()
   .mockResolvedValue(mockFetchValue);
 
 createFetch.mockResolvedValue(fetch);
-fetchItem.mockImplementation(fetch);
+fetchItem.mockResolvedValue(mockFetchValue);
 
 test('remove file', () => {
   const name = 'test.txt';
@@ -106,10 +111,10 @@ test('remove file info error on delete', () => {
     url: 'https://example.com',
     json,
   };
-  fetch.mockResolvedValueOnce(mockFetchValue);
   fetch.mockResolvedValueOnce(data);
+  createFetch.mockResolvedValueOnce(fetch);
   const error = new Error(`${data.status} ${data.statusText} ${data.url}`);
   const result = remove('abcd', type, name).toPromise();
 
-  return expect(result).rejects.toEqual(error);
+  return expect(result).resolves.toEqual(error);
 });

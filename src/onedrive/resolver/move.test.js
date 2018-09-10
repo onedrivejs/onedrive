@@ -1,4 +1,5 @@
 const fetchItem = require('./item');
+const getParent = require('./parent');
 const createFetch = require('../fetch');
 const move = require('./move');
 
@@ -8,9 +9,15 @@ jest.mock('./parent');
 jest.mock('./item');
 jest.mock('fs');
 
-const mockJsonValue = {};
+const mockFrom = {
+  id: '123',
+  parentReference: {
+    driveId: 'abc',
+  },
+};
+
 const json = jest.fn()
-  .mockResolvedValue(mockJsonValue);
+  .mockResolvedValue(mockFrom);
 
 const mockFetchValue = {
   ok: true,
@@ -21,12 +28,12 @@ const fetch = jest.fn()
 
 createFetch.mockResolvedValue(fetch);
 fetchItem.mockImplementation(fetch);
+getParent.mockResolvedValue(mockFrom);
 
 test('move file', () => {
   const type = 'file';
   const name = 'test2.txt';
-  const oldName = 'test.txt';
-  const result = move('1234', type, name, oldName).toPromise();
+  const result = move('1234', type, name, mockFrom).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'move',
@@ -39,8 +46,7 @@ test('move file', () => {
 test('move file subfolder', () => {
   const type = 'file';
   const name = 'test/test2.txt';
-  const oldName = 'test.txt';
-  const result = move('1234', type, name, oldName).toPromise();
+  const result = move('1234', type, name, mockFrom).toPromise();
 
   return expect(result).resolves.toEqual({
     action: 'move',
@@ -65,7 +71,7 @@ test('move file unkown error', () => {
   fetch.mockResolvedValueOnce(data);
   const error = new Error(`${data.status} ${data.statusText} ${url}`);
   error.data = data;
-  const result = move('1234', type, name, oldName).toPromise();
+  const result = move('1234', type, name, mockFrom).toPromise();
 
   return expect(result).rejects.toEqual(error);
 });

@@ -14,6 +14,9 @@ test('creates a folder in the root', () => {
   const json = jest.fn()
     .mockResolvedValueOnce({
       id: '123',
+      parentReference: {
+        driveId: 'abc',
+      },
     });
   fetch.mockResolvedValue({
     ok: true,
@@ -24,7 +27,10 @@ test('creates a folder in the root', () => {
   const name = 'test';
   const result = ensureDir(fetch, name);
 
-  return expect(result).resolves.toEqual('123');
+  return expect(result).resolves.toEqual({
+    id: '123',
+    driveId: 'abc',
+  });
 });
 
 test('creates a folder in the root failure', () => {

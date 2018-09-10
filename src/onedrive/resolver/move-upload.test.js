@@ -4,6 +4,7 @@ const createFolder = require('./create');
 const move = require('./move');
 const remove = require('./remove');
 const upload = require('./upload');
+const getParent = require('./parent');
 const createFetch = require('../fetch');
 const fetchItem = require('./item');
 
@@ -14,10 +15,16 @@ jest.mock('./create');
 jest.mock('../fetch');
 jest.mock('./item');
 
+const mockParent = {
+  id: '123',
+  driveId: 'abc',
+};
+
 move.mockResolvedValue(true);
 createFolder.mockResolvedValue(false);
 upload.mockResolvedValue(false);
 remove.mockResolvedValue(false);
+getParent.mockResolvedValue(mockParent);
 
 const mockJsonValue = {};
 
