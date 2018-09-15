@@ -29,7 +29,7 @@ const remove = (directory, type, name) => {
         throw error;
       }
     }),
-  )
+  );
 };
 
 module.exports = remove;

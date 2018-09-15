@@ -2,6 +2,7 @@ const { DateTime } = require('luxon');
 const fetchItem = require('./item');
 const createFetch = require('../fetch');
 const uploadFile = require('./upload');
+const getParent = require('./parent');
 
 jest.mock('node-fetch');
 jest.mock('../fetch');
@@ -9,7 +10,11 @@ jest.mock('./parent');
 jest.mock('./item');
 jest.mock('fs');
 
-const mockJsonValue = {};
+const mockJsonValue = {
+  parentReference: {
+    driveId: 'abcd',
+  },
+};
 const json = jest.fn()
   .mockResolvedValue(mockJsonValue);
 
@@ -22,6 +27,12 @@ const fetch = jest.fn()
 
 createFetch.mockResolvedValue(fetch);
 fetchItem.mockImplementation(fetch);
+getParent.mockResolvedValue({
+  id: '1234',
+  parentReference: {
+    driveId: 'abcd',
+  },
+});
 
 const content = jest.fn();
 

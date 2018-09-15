@@ -5,7 +5,7 @@ const {
   EMPTY,
 } = require('rxjs');
 const { flatMap } = require('rxjs/operators');
-const { dirname, basename } = require('path');
+const { basename } = require('path');
 const { DateTime } = require('luxon');
 const getParent = require('./parent');
 const fetchItem = require('./item');

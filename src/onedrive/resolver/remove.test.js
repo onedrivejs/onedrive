@@ -87,7 +87,6 @@ test('remove file no longer exists on delete', () => {
     url: 'https://example.com',
     json,
   };
-  fetch.mockResolvedValueOnce(mockFetchValue);
   fetch.mockResolvedValueOnce(data);
   const error = new Error(`${data.status} ${data.statusText} ${data.url}`);
   const result = remove('abcd', type, name).toPromise();
@@ -112,9 +111,8 @@ test('remove file info error on delete', () => {
     json,
   };
   fetch.mockResolvedValueOnce(data);
-  createFetch.mockResolvedValueOnce(fetch);
   const error = new Error(`${data.status} ${data.statusText} ${data.url}`);
   const result = remove('abcd', type, name).toPromise();
 
-  return expect(result).resolves.toEqual(error);
+  return expect(result).rejects.toEqual(error);
 });

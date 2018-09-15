@@ -14,6 +14,7 @@ jest.mock('./remove');
 jest.mock('./create');
 jest.mock('../fetch');
 jest.mock('./item');
+jest.mock('./parent');
 
 const mockParent = {
   id: '123',
@@ -26,7 +27,11 @@ upload.mockResolvedValue(false);
 remove.mockResolvedValue(false);
 getParent.mockResolvedValue(mockParent);
 
-const mockJsonValue = {};
+const mockJsonValue = {
+  parentReference: {
+    driveId: 'abc',
+  },
+};
 
 const json = jest.fn()
   .mockResolvedValue(mockJsonValue);
@@ -141,10 +146,13 @@ test('move upload item has same hash as filesystem', () => {
         sha1Hash: hash,
       },
     },
+    parentReference: {
+      driveId: 'abcd',
+    },
   });
   const result = moveUpload('1234', type, 'test2.txt', hash, DateTime.local(), 128, 'test.txt').toPromise();
 
-  return expect(result).resolves.toBeTruthy();
+  return expect(result).resolves.toBeFalsy();
 });
 
 test('move upload unnecessary move', () => {
@@ -155,6 +163,9 @@ test('move upload unnecessary move', () => {
       hashes: {
         sha1Hash: hash,
       },
+    },
+    parentReference: {
+      driveId: 'abcd',
     },
   };
   json.mockResolvedValueOnce(data);
