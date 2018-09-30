@@ -3,7 +3,7 @@ OneDrive client written in JavaScript (node.js).
 
 ## Installation
 ```
-npm install -g @onedrivejs/onedrive
+npm install -g onedrivejs
 ```
 
 ## Setup
