@@ -1,4 +1,14 @@
 {
+  "name": "onedrivejs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onedrive-js/onedrive.git"
+  },
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/onedrive-js/onedrive/issues"
+  },
+  "homepage": "https://github.com/onedrive-js/onedrive#readme",
   "dependencies": {
     "chalk": "^2.4.1",
     "commander": "^2.15.1",
@@ -24,18 +34,12 @@
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.9.1"
   },
+  "bin": {
+    "onedrive": "bin/onedrive"
+  },
   "scripts": {
     "test": "jest"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/onedrive-js/onedrive.git"
-  },
-  "license": "GPL-3.0-or-later",
-  "bugs": {
-    "url": "https://github.com/onedrive-js/onedrive/issues"
-  },
-  "homepage": "https://github.com/onedrive-js/onedrive#readme",
   "jest": {
     "roots": [
       "src"
