@@ -137,3 +137,30 @@ test('reject when no next or delta link is present', () => {
 
   return expect(data).rejects.toEqual(new Error('OneDrive API did not return a nextLink or deltaLink'));
 });
+
+test('delta with drive id and item id', () => {
+  const json = jest.fn()
+    .mockResolvedValueOnce({
+      '@odata.deltaLink': 'https://example.com',
+      value: [
+        {
+          id: '123',
+        },
+      ],
+    });
+  fetch.mockResolvedValue({
+    ok: true,
+    json,
+  });
+  createFetch.mockResolvedValue(fetch);
+
+  const stream = delta('sdsdkfd', 'abcd', '1234');
+
+  expect(stream).toBeInstanceOf(Observable);
+
+  const data = stream.pipe(take(1)).toPromise();
+
+  return expect(data).resolves.toEqual({
+    id: '123',
+  });
+});

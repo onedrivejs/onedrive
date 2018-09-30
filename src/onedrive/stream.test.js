@@ -305,3 +305,97 @@ test('modified time returns datetime object', () => {
     expect(event.modified).toBeInstanceOf(DateTime);
   });
 });
+
+test('remote item starts new delta', () => {
+  const subject = new Subject();
+  const remoteItemSubject = new Subject();
+  delta.mockReturnValueOnce(subject);
+  delta.mockReturnValueOnce(remoteItemSubject);
+  const stream = createStream('1234');
+
+  const data = stream.pipe(take(2)).toPromise();
+
+  subject.next({
+    id: '321',
+    name: 'test',
+    parentReference: {
+      path: '/drive/root:',
+    },
+    remoteItem: {
+      id: '123',
+      parentReference: {
+        driveId: 'abcd',
+      },
+    },
+  });
+
+  remoteItemSubject.next({
+    id: '456',
+    name: 'test.txt',
+    file: {
+      hashes: {
+        sha1Hash: 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
+      },
+    },
+    parentReference: {
+      id: '123',
+      path: '/drives/abcd/items/321:',
+    },
+    '@microsoft.graph.downloadUrl': 'https://example.com',
+  });
+
+  return expect(data).resolves.toEqual({
+    action: 'add',
+    id: '456',
+    modified: null,
+    type: 'file',
+    name: 'test/test.txt',
+    hash: 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
+    download: downloader,
+  });
+});
+
+test('remote item is deleted', () => {
+  const subject = new Subject();
+  const remoteItemSubject = new Subject();
+  delta.mockReturnValueOnce(subject);
+  delta.mockReturnValueOnce(remoteItemSubject);
+  const stream = createStream('1234');
+
+  const data = stream.pipe(take(2)).toPromise();
+
+  subject.next({
+    id: '321',
+    name: 'test',
+    parentReference: {
+      path: '/drive/root:',
+    },
+    remoteItem: {
+      id: '123',
+      parentReference: {
+        driveId: 'abcd',
+      },
+    },
+  });
+
+  subject.next({
+    id: '321',
+    name: 'test',
+    remoteItem: {},
+    deleted: {},
+    parentReference: {
+      path: '/drive/root:',
+    },
+  });
+
+
+  return expect(data).resolves.toEqual({
+    action: 'remove',
+    id: '321',
+    name: 'test',
+    type: 'folder',
+    hash: null,
+    modified: null,
+    download: null,
+  });
+});

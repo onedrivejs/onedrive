@@ -1,4 +1,4 @@
-const { of, Subject } = require('rxjs');
+const { of, concat, Subject } = require('rxjs');
 const { flatMap, map } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const { join } = require('path');
@@ -9,10 +9,12 @@ const formatAction = (action, file, name, hash) => {
   let type;
   if ('file' in file) {
     type = 'file';
-  } else if ('folder' in file) {
+  } else if ('folder' in file || 'remoteItem' in file) {
     type = 'folder';
   } else {
-    throw new Error('Unhandled item type');
+    const error = new Error('Unhandled item type');
+    error.file = file;
+    throw error;
   }
 
   return {
@@ -32,11 +34,11 @@ const stream = (refreshToken) => {
 
   return delta(refreshToken).pipe(
     flatMap((file) => {
-      if ('remoteItem' in file) {
+      if (!('deleted' in file) && 'remoteItem' in file) {
         const cancel = new Subject();
         shared.set(file.id, cancel);
 
-        return delta(
+        const remoteItemStream = delta(
           refreshToken,
           file.remoteItem.parentReference.driveId,
           file.remoteItem.id,
@@ -48,6 +50,8 @@ const stream = (refreshToken) => {
             namespace: file,
           })),
         );
+
+        return concat(of(file), remoteItemStream);
       }
 
       return of(file);

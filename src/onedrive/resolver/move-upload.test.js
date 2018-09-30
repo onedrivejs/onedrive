@@ -174,3 +174,42 @@ test('move upload unnecessary move', () => {
 
   return expect(result).resolves.toBeFalsy();
 });
+
+test('move upload accross shared drives', () => {
+  fetch.mockResolvedValueOnce(mockFetchValue);
+  fetch.mockResolvedValueOnce({
+    ...mockFetchValue,
+    ok: false,
+    status: 404,
+  });
+  getParent.mockResolvedValueOnce({
+    ...mockParent,
+    driveId: 'def',
+  });
+  const result = moveUpload('1234', 'file', 'test2.txt', 'abcd', DateTime.local(), 128, 'test.txt').toPromise();
+
+  return expect(result).resolves.toBeFalsy();
+});
+
+test('move upload safe to move', () => {
+  json.mockResolvedValueOnce({
+    ...mockJsonValue,
+    file: {
+      hashes: {
+        sha1Hash: 'abcd',
+      },
+    },
+  });
+  json.mockResolvedValueOnce({
+    ...mockJsonValue,
+    file: {
+      hashes: {
+        sha1Hash: 'efgh',
+      },
+    },
+  });
+
+  const result = moveUpload('1234', 'file', 'test2.txt', 'abcd', DateTime.local(), 128, 'test.txt').toPromise();
+
+  return expect(result).resolves.toBeTruthy();
+});

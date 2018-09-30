@@ -22,7 +22,7 @@ const fetch = jest.fn()
   .mockResolvedValue(mockFetchValue);
 
 createFetch.mockResolvedValue(fetch);
-fetchItem.mockResolvedValue(mockFetchValue);
+fetchItem.mockImplementation(fetch);
 
 test('remove file', () => {
   const name = 'test.txt';
@@ -87,6 +87,7 @@ test('remove file no longer exists on delete', () => {
     url: 'https://example.com',
     json,
   };
+  fetch.mockResolvedValueOnce(mockFetchValue);
   fetch.mockResolvedValueOnce(data);
   const error = new Error(`${data.status} ${data.statusText} ${data.url}`);
   const result = remove('abcd', type, name).toPromise();
@@ -110,6 +111,7 @@ test('remove file info error on delete', () => {
     url: 'https://example.com',
     json,
   };
+  fetch.mockResolvedValueOnce(mockFetchValue);
   fetch.mockResolvedValueOnce(data);
   const error = new Error(`${data.status} ${data.statusText} ${data.url}`);
   const result = remove('abcd', type, name).toPromise();
