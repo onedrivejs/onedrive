@@ -10,7 +10,8 @@ const timeout = ms => (
 const createFetch = async (refreshToken) => {
   const fetchAccessToken = async (iteration = 0) => {
     try {
-      return client.accessToken.create({
+      // Must await the result for the try...catch block to work.
+      return await client.accessToken.create({
         refresh_token: refreshToken,
       }).refresh();
     } catch (e) {

@@ -7,7 +7,8 @@ const timeout = ms => (
 
 const createDownload = (url, iteration = 0) => async (options) => {
   try {
-    return fetch(url, options);
+    // Must await the result for the try...catch block to work.
+    return await fetch(url, options);
   } catch (e) {
     const time = (2 ** iteration) * 1000;
     log('warn', e);

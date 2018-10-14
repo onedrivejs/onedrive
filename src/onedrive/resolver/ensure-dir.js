@@ -1,8 +1,5 @@
 const createError = require('../../utils/error');
 
-// @TODO FIGURE OUT WHY FOLDERS WITH SPACES HAVE %20! This might be on OneDrive Folder Create or File System folder create.
-//       Regardless, test folders / files with spaces in them!
-
 const ensureDir = async (fetch, name) => {
   let parent = {
     id: 'root',

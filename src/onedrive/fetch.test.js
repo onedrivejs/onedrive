@@ -6,12 +6,14 @@ jest.mock('node-fetch');
 jest.mock('./client');
 jest.mock('../utils/logger');
 
+const mockRefresh = jest.fn().mockResolvedValue({
+  token: {
+    access_token: '4321',
+  },
+});
+
 client.accessToken.create.mockReturnValue({
-  refresh: jest.fn().mockReturnValue({
-    token: {
-      access_token: '4321',
-    },
-  }),
+  refresh: mockRefresh,
 });
 
 const mockResponse = {
@@ -50,6 +52,20 @@ test('retries after 500', () => {
     status: 500,
   });
   nodeFetch.mockResolvedValueOnce(mockResponse);
+  const response = createFetch('1234').then(fetch => fetch('https://example.com'));
+
+  return expect(response).resolves.toEqual(mockResponse);
+});
+
+test('retries after access token network failure', () => {
+  mockRefresh.mockRejectedValueOnce(new Error());
+  const response = createFetch('1234').then(fetch => fetch('https://example.com'));
+
+  return expect(response).resolves.toEqual(mockResponse);
+});
+
+test('retries after network failure', () => {
+  nodeFetch.mockRejectedValueOnce(new Error());
   const response = createFetch('1234').then(fetch => fetch('https://example.com'));
 
   return expect(response).resolves.toEqual(mockResponse);

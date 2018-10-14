@@ -1,4 +1,4 @@
-const { of, concat, Subject, EMPTY } = require('rxjs');
+const { of, concat, Subject } = require('rxjs');
 const { flatMap, map } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const { join } = require('path');
@@ -34,12 +34,7 @@ const stream = (refreshToken) => {
 
   return delta(refreshToken).pipe(
     flatMap((file) => {
-      if (!('deleted' in file) && 'remoteItem' in file) {
-        // If the shared drive is already being processed, then return empty.
-        if (shared.has(file.id)) {
-          return EMPTY;
-        }
-
+      if (!('deleted' in file) && ('remoteItem' in file) && !shared.has(file.id)) {
         const cancel = new Subject();
         shared.set(file.id, cancel);
 
