@@ -22,6 +22,23 @@ const getActionName = (action) => {
   }
 };
 
+const getReactionName = (reaction) => {
+  switch (reaction) {
+    case 'add':
+      return 'added';
+    case 'change':
+      return 'changed';
+    case 'copy':
+      return 'copied';
+    case 'move':
+      return 'moved';
+    case 'remove':
+      return 'removed';
+    default:
+      return reaction;
+  }
+};
+
 const getPreposition = (action) => {
   if (['upload', 'download'].includes(action)) {
     return 'to';
@@ -78,7 +95,23 @@ const logAction = ({
   return log('info', `${getActionName(action)} ${type} ${fileNameText} ${getPreposition(action)} ${getSystemName(system)} ${phaseText}`);
 };
 
+const capitalizeFirstLetter = string => (
+  string.charAt(0).toUpperCase() + string.slice(1).toLowerCase()
+);
+
+const logReaction = ({
+  action,
+  type,
+  name,
+  system,
+}) => {
+  const fileNameText = chalk.gray(name);
+
+  return log('info', `${capitalizeFirstLetter(type)} ${fileNameText} was ${getReactionName(action)} on ${getSystemName(system)}`);
+};
+
 module.exports = {
   log,
   logAction,
+  logReaction,
 };

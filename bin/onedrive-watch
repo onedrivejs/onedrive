@@ -1,18 +1,29 @@
 #!/usr/bin/env node
 const program = require('commander');
 const path = require('path');
-const dotenv = require('dotenv');
 const { Client } = require('fb-watchman');
+const dotenv = require('dotenv');
+const Sentry = require('@sentry/node');
+const { tap } = require('rxjs/operators');
 const creatFsStream = require('../src/fs/stream');
 const fsResolver = require('../src/fs/resolver/resolver');
 const createOneDriveStream = require('../src/onedrive/stream');
 const oneDriveResolver = require('../src/onedrive/resolver/resolver');
-const { log, logAction } = require('../src/utils/logger');
+const { log, logAction, logReaction } = require('../src/utils/logger');
 
+// Load the environment variables.
 dotenv.load();
+
+// Initialize Sentry if the user has set the SENTRY_DSN environment variable.
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+  });
+}
 
 program
   .arguments('<directory>')
+  .option('-v, --verbose', 'verbose output')
   .option('-rt, --refresh-token', 'OneDrive Refresh Token')
   .parse(process.argv);
 
@@ -35,6 +46,14 @@ const watch = () => {
   const directory = path.resolve(program.args[0]);
 
   createOneDriveStream(refreshToken).pipe(
+    tap((data) => {
+      if (program.verbose) {
+        logReaction({
+          ...data,
+          system: 'onedrive',
+        });
+      }
+    }),
     fsResolver(directory),
   ).subscribe((data) => {
     logAction({
@@ -44,6 +63,14 @@ const watch = () => {
   });
 
   creatFsStream(new Client(), directory).pipe(
+    tap((data) => {
+      if (program.verbose) {
+        logReaction({
+          ...data,
+          system: 'fs',
+        });
+      }
+    }),
     oneDriveResolver(refreshToken),
   ).subscribe((data) => {
     logAction({

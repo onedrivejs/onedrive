@@ -1,4 +1,4 @@
-const { of, concat, Subject } = require('rxjs');
+const { of, concat, Subject, EMPTY } = require('rxjs');
 const { flatMap, map } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const { join } = require('path');
@@ -35,6 +35,11 @@ const stream = (refreshToken) => {
   return delta(refreshToken).pipe(
     flatMap((file) => {
       if (!('deleted' in file) && 'remoteItem' in file) {
+        // If the shared drive is already being processed, then return empty.
+        if (shared.has(file.id)) {
+          return EMPTY;
+        }
+
         const cancel = new Subject();
         shared.set(file.id, cancel);
 
@@ -63,12 +68,18 @@ const stream = (refreshToken) => {
       // Use the name from the parent if it exists.
       // @TODO What is this? Creating folder drives on File System start
       if (file.parentReference && file.parentReference.path) {
-        // If the namespace remote reference equals the parent reference of the
-        // file, then the file is in the root of the namespace.
-        if (file.namespace && file.namespace.remoteItem.id === file.parentReference.id) {
-          name = join(file.namespace.parentReference.path, file.namespace.name, file.name).replace(/^.*:\//g, '');
+        // Possible paths:
+        // /drive/root:
+        // /drive/root:/example%20folder
+        // /drives/abcd/items/efg!123:
+        // /drives/abcd/items/efg!123:/example%20folder
+        let [, parentPath] = file.parentReference.path.split(':');
+        // Remove the first forward slash and the URL encoding.
+        parentPath = decodeURI((parentPath || '').replace(/^\//, ''));
+        if (file.namespace) {
+          name = join(file.namespace.name, parentPath, file.name);
         } else {
-          name = join(file.parentReference.path, file.name).replace(/^.*:\//g, '');
+          name = join(parentPath, file.name);
         }
       } else if (existing) {
         ({ name } = existing);

@@ -1,12 +1,14 @@
-const { sep } = require('path');
 const createError = require('../../utils/error');
+
+// @TODO FIGURE OUT WHY FOLDERS WITH SPACES HAVE %20! This might be on OneDrive Folder Create or File System folder create.
+//       Regardless, test folders / files with spaces in them!
 
 const ensureDir = async (fetch, name) => {
   let parent = {
     id: 'root',
     driveId: undefined,
   };
-  const parts = name.split(sep);
+  const parts = name.split('/');
 
   // Itentially adding a loop so the requests are *not* executed in parallel.
   // eslint-disable-next-line no-restricted-syntax
@@ -18,7 +20,7 @@ const ensureDir = async (fetch, name) => {
       url = `https://graph.microsoft.com/v1.0/drives/${parent.driveId}/items/${parent.id}/children`;
     }
     // eslint-disable-next-line no-await-in-loop
-    const response = await fetch(url, {
+    let response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -29,11 +31,29 @@ const ensureDir = async (fetch, name) => {
       }),
     });
 
-    const data = await response.json(); // eslint-disable-line no-await-in-loop
+    let data = await response.json(); // eslint-disable-line no-await-in-loop
 
-    // Gracefully handle the error somehow?
     if (!response.ok) {
-      throw createError(response, data);
+      // Conflict means something already exists at this name, but is not a
+      // folder. Check to see if it is folder-like.
+      if (response.status !== 409) {
+        throw createError(response, data);
+      }
+
+      if (!parent.driveId) {
+        url = `https://graph.microsoft.com/v1.0/me/drive/root:/${encodeURIComponent(folderName)}`;
+      } else {
+        url = `https://graph.microsoft.com/v1.0/drives/${parent.driveId}/items/${parent.id}:/${encodeURIComponent(folderName)}`;
+      }
+
+      response = await fetch(url); // eslint-disable-line no-await-in-loop
+
+      data = await response.json(); // eslint-disable-line no-await-in-loop
+
+      // If the response is not ok, or the item is not folder-like, throw an error.
+      if (!response.ok || (!('folder' in data) && !('remoteItem' in data))) {
+        throw createError(response, data);
+      }
     }
 
     if ('remoteItem' in data) {
