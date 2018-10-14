@@ -1,5 +1,5 @@
 const { EOL } = require('os');
-const { log, logAction } = require('./logger');
+const { log, logAction, logReaction } = require('./logger');
 
 jest.mock('chalk', () => ({
   gray: jest.fn().mockImplementation(text => text),
@@ -161,4 +161,70 @@ test('log action upload onedrive', () => {
   });
 
   return expect(consoleLog).toHaveBeenCalledWith('Uploading file test.txt to OneDrive start chunk 1 of 1');
+});
+
+test('log reaction', () => {
+  logReaction({
+    action: 'test',
+    type: 'symlink',
+    name: 'test.txt',
+    system: 'test',
+  });
+
+  return expect(consoleLog).toHaveBeenCalledWith('Symlink test.txt was test on test');
+});
+
+test('log reaction add', () => {
+  logReaction({
+    action: 'add',
+    type: 'file',
+    name: 'test.txt',
+    system: 'test',
+  });
+
+  return expect(consoleLog).toHaveBeenCalledWith('File test.txt was added on test');
+});
+
+test('log reaction change', () => {
+  logReaction({
+    action: 'change',
+    type: 'file',
+    name: 'test.txt',
+    system: 'test',
+  });
+
+  return expect(consoleLog).toHaveBeenCalledWith('File test.txt was changed on test');
+});
+
+test('log reaction copy', () => {
+  logReaction({
+    action: 'copy',
+    type: 'file',
+    name: 'test.txt',
+    system: 'test',
+  });
+
+  return expect(consoleLog).toHaveBeenCalledWith('File test.txt was copied on test');
+});
+
+test('log reaction move', () => {
+  logReaction({
+    action: 'move',
+    type: 'file',
+    name: 'test.txt',
+    system: 'test',
+  });
+
+  return expect(consoleLog).toHaveBeenCalledWith('File test.txt was moved on test');
+});
+
+test('log reaction remove', () => {
+  logReaction({
+    action: 'remove',
+    type: 'file',
+    name: 'test.txt',
+    system: 'test',
+  });
+
+  return expect(consoleLog).toHaveBeenCalledWith('File test.txt was removed on test');
 });
