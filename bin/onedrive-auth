@@ -3,7 +3,8 @@ const program = require('commander');
 const inquirer = require('inquirer');
 const URL = require('url');
 const opn = require('opn');
-const { parse } = require('dotenv');
+const dotenv = require('dotenv');
+const Sentry = require('@sentry/node');
 const { stringifySync } = require('envfile');
 const util = require('util');
 const fs = require('fs');
@@ -12,6 +13,16 @@ const client = require('../src/onedrive/client');
 
 const { createReadStream } = fs;
 const writeFile = util.promisify(fs.writeFile);
+
+// Load the environment variables.
+dotenv.load();
+
+// Initialize Sentry if the user has set the SENTRY_DSN environment variable.
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+  });
+}
 
 program
   .option('-n, --no-write', 'do not write the refresh token to .env')
@@ -68,7 +79,7 @@ const auth = async () => {
   let env = {};
   try {
     const envFile = createReadStream(envPath);
-    env = parse(envFile);
+    env = dotenv.parse(envFile);
   } catch (e) {
     // Silence is golden.
   }

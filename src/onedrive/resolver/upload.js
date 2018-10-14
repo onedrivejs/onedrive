@@ -48,7 +48,7 @@ const getUploadUrl = async (fetch, name) => {
   const fileName = basename(name);
   const parent = await getParent(fetch, name);
 
-  const url = `https://graph.microsoft.com/v1.0/drives/${parent.driveId}/items/${parent.id}:/${fileName}:/createUploadSession`;
+  const url = `https://graph.microsoft.com/v1.0/drives/${parent.driveId}/items/${parent.id}:/${encodeURIComponent(fileName)}:/createUploadSession`;
   const response = await fetch(url, {
     method: 'POST',
     headers: {

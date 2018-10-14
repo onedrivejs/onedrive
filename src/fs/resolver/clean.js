@@ -22,7 +22,7 @@ const cleanTrash = (directory) => {
   const threshold = DateTime.local().minus({ months: 1 });
 
   return concat(
-    formatAction('remove', 'start', type, name),
+    formatAction(action, 'start', type, name),
     from(readdir(trash)).pipe(
       // Create a new emmit from each path.
       flatMap(paths => from(paths)),
