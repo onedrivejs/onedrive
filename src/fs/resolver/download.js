@@ -68,6 +68,11 @@ const downloadFile = (directory, name, hash, modified, downloader) => {
       }
 
       const result = new AsyncSubject();
+      const reject = (reason) => {
+        result.error(reason);
+        result.complete();
+        return reason;
+      };
       const resolve = (action) => {
         result.next(action);
         result.complete();
@@ -121,7 +126,7 @@ const downloadFile = (directory, name, hash, modified, downloader) => {
           });
           return resolve(formatActionSync('download', 'end', type, name));
         }
-      });
+      }).catch(e => reject(e));
 
       return merge(
         formatAction('download', cancel, type, name),

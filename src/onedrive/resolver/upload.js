@@ -83,7 +83,12 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
       }
 
       const progress = new Subject();
-      const result = AsyncSubject();
+      const result = new AsyncSubject();
+      const reject = (reason) => {
+        result.error(reason);
+        result.complete();
+        return reason;
+      };
       const resolve = (action) => {
         result.next(action);
         result.complete();
@@ -189,7 +194,7 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
 
         progress.complete();
         return resolve(formatActionSync('upload', 'end', type, name));
-      });
+      }).catch(e => reject(e));
 
       return merge(
         formatAction('upload', cancel, type, name),
