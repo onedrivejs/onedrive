@@ -86,8 +86,8 @@ const downloadFile = (directory, name, hash, modified, downloader) => {
 
             // Allow override this time.
             await ensureDir(dirname(path));
-            await copy(tmpPath, path, {
-              preserveTimestamps: true,
+            await move(tmpPath, path, {
+              overwrite: true,
             });
             return formatAction('download', 'end', type, name);
           }
