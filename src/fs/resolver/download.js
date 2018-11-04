@@ -84,14 +84,12 @@ const downloadFile = (directory, name, hash, modified, downloader) => {
               // Copy the existing file to the trash.
               const trashPath = join(directory, '.trash', name);
               await ensureDir(dirname(trashPath));
-              await move(tmpPath, path, {
-                overwrite: true,
-              });
+              await copy(path, trashPath);
 
               // Allow override this time.
               await ensureDir(dirname(path));
-              await copy(tmpPath, path, {
-                preserveTimestamps: true,
+              await move(tmpPath, path, {
+                overwrite: true,
               });
               return formatAction('download', 'end', type, name);
             }
