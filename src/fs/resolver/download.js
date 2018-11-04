@@ -66,7 +66,7 @@ const downloadFile = (directory, name, hash, modified, downloader) => {
             return formatAction('download', createError(response), type, name);
           }
 
-          const tmpPath = join(tmpdir(), ulid() + extname(path));
+          const tmpPath = join(tmpdir(), ulid().toLowerCase() + extname(path));
           const body = new PassThrough();
           response.body.pipe(body);
           await promisePipe(body, fs.createWriteStream(tmpPath, {
