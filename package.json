@@ -27,7 +27,8 @@
     "promisepipe": "^3.0.0",
     "recursive-readdir": "^2.2.2",
     "rxjs": "^6.2.1",
-    "simple-oauth2": "^2.2.0"
+    "simple-oauth2": "^2.2.0",
+    "ulid": "^2.3.0"
   },
   "devDependencies": {
     "eslint": "^4.19.1",

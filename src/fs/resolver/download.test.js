@@ -1,5 +1,6 @@
 const { DateTime } = require('luxon');
 const { stat, utimes } = require('fs');
+const { move } = require('fs-extra');
 const { fromFile: hashFromFile } = require('hasha');
 const promisePipe = require('promisepipe');
 const downloadFile = require('./download');
@@ -106,9 +107,7 @@ test('download file bad response', () => {
 
 test('download file will override', () => {
   const error = new Error();
-  error.originalError = new Error();
-  error.originalError.code = 'EEXIST';
-  promisePipe.mockRejectedValueOnce(error);
+  move.mockRejectedValueOnce(error);
   const name = 'test.txt';
   const result = downloadFile('/data', name, 'abcd', DateTime.local(), downloader).toPromise();
 
