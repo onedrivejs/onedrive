@@ -79,23 +79,17 @@ const downloadFile = (directory, name, hash, modified, downloader) => {
             await move(tmpPath, path);
             return formatAction('download', 'end', type, name);
           } catch (error) {
-            // If the file was going to be overridden.
-            if (error.originalError && error.originalError.code === 'EEXIST') {
-              // Copy the existing file to the trash.
-              const trashPath = join(directory, '.trash', name);
-              await ensureDir(dirname(trashPath));
-              await copy(path, trashPath);
+            // Copy the existing file to the trash.
+            const trashPath = join(directory, '.trash', name);
+            await ensureDir(dirname(trashPath));
+            await copy(path, trashPath);
 
-              // Allow override this time.
-              await ensureDir(dirname(path));
-              await move(tmpPath, path, {
-                overwrite: true,
-              });
-              return formatAction('download', 'end', type, name);
-            }
-
-            // Some other error we don't know how to deal with.
-            throw error;
+            // Allow override this time.
+            await ensureDir(dirname(path));
+            await copy(tmpPath, path, {
+              preserveTimestamps: true,
+            });
+            return formatAction('download', 'end', type, name);
           }
         }),
       );
