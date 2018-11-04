@@ -9,6 +9,16 @@ const formatActionSync = (action, phase, type, name, chunk) => {
     };
   }
 
+  if (typeof phase === 'function') {
+    return {
+      action,
+      phase: 'start',
+      type,
+      name,
+      cancel: phase,
+    };
+  }
+
   if (chunk) {
     return {
       action,

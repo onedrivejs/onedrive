@@ -1,9 +1,19 @@
 const { join, dirname, extname } = require('path');
 const { tmpdir } = require('os');
-const { from, merge, EMPTY } = require('rxjs');
+const {
+  from,
+  merge,
+  EMPTY,
+  AsyncSubject,
+} = require('rxjs');
 const { flatMap } = require('rxjs/operators');
 const { fromFile: hashFromFile } = require('hasha');
-const { ensureDir, move, copy } = require('fs-extra');
+const {
+  ensureDir,
+  move,
+  copy,
+  remove,
+} = require('fs-extra');
 const fs = require('fs');
 const { DateTime } = require('luxon');
 const { promisify } = require('util');
@@ -11,7 +21,7 @@ const promisePipe = require('promisepipe');
 const { PassThrough } = require('stream');
 const { monotonicFactory } = require('ulid');
 const createError = require('../../utils/error');
-const { formatAction } = require('../../utils/format-action');
+const { formatAction, formatActionSync } = require('../../utils/format-action');
 
 const ulid = monotonicFactory();
 const stat = promisify(fs.stat);
@@ -57,41 +67,65 @@ const downloadFile = (directory, name, hash, modified, downloader) => {
         return EMPTY;
       }
 
+      const result = new AsyncSubject();
+      const resolve = (action) => {
+        result.next(action);
+        result.complete();
+        return action;
+      };
+      const cancel = () => (
+        resolve(formatActionSync('download', 'cancel', type, name))
+      );
+
+      Promise.resolve().then(async () => {
+        const response = await downloader();
+
+        // There is no way to abort the download in node-fetch, so abort after
+        // it is done.
+        if (result.closed) {
+          return false;
+        }
+
+        if (!response.ok) {
+          return resolve(formatActionSync('download', createError(response), type, name));
+        }
+
+        const tmpPath = join(tmpdir(), ulid().toLowerCase() + extname(path));
+        const body = new PassThrough();
+        response.body.pipe(body);
+        await promisePipe(body, fs.createWriteStream(tmpPath, {
+          flags: 'wx',
+        }));
+        await utimes(tmpPath, new Date(), modified.toJSDate());
+
+        // If the request has been aborted, delete the file and end.
+        if (result.closed) {
+          await remove(tmpPath);
+          return false;
+        }
+
+        try {
+          await ensureDir(dirname(path));
+          await move(tmpPath, path);
+          return resolve(formatActionSync('download', 'end', type, name));
+        } catch (error) {
+          // Copy the existing file to the trash.
+          const trashPath = join(directory, '.trash', name);
+          await ensureDir(dirname(trashPath));
+          await copy(path, trashPath);
+
+          // Allow override this time.
+          await ensureDir(dirname(path));
+          await move(tmpPath, path, {
+            overwrite: true,
+          });
+          return resolve(formatActionSync('download', 'end', type, name));
+        }
+      });
+
       return merge(
-        formatAction('download', 'start', type, name),
-        Promise.resolve().then(async () => {
-          const response = await downloader();
-
-          if (!response.ok) {
-            return formatAction('download', createError(response), type, name);
-          }
-
-          const tmpPath = join(tmpdir(), ulid().toLowerCase() + extname(path));
-          const body = new PassThrough();
-          response.body.pipe(body);
-          await promisePipe(body, fs.createWriteStream(tmpPath, {
-            flags: 'wx',
-          }));
-          await utimes(tmpPath, new Date(), modified.toJSDate());
-
-          try {
-            await ensureDir(dirname(path));
-            await move(tmpPath, path);
-            return formatAction('download', 'end', type, name);
-          } catch (error) {
-            // Copy the existing file to the trash.
-            const trashPath = join(directory, '.trash', name);
-            await ensureDir(dirname(trashPath));
-            await copy(path, trashPath);
-
-            // Allow override this time.
-            await ensureDir(dirname(path));
-            await move(tmpPath, path, {
-              overwrite: true,
-            });
-            return formatAction('download', 'end', type, name);
-          }
-        }),
+        formatAction('download', cancel, type, name),
+        result,
       );
     }),
   );

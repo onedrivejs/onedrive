@@ -3,6 +3,7 @@ const {
   from,
   merge,
   EMPTY,
+  AsyncSubject,
 } = require('rxjs');
 const { flatMap } = require('rxjs/operators');
 const { basename } = require('path');
@@ -75,97 +76,125 @@ const getUploadUrl = async (fetch, name) => {
 const uploadFile = (refreshToken, name, hash, modified, size, content) => {
   const type = 'file';
 
-  const progress = new Subject();
-
   return from(shouldUploadFile(refreshToken, name, hash, modified)).pipe(
     flatMap((should) => {
       if (!should) {
         return EMPTY;
       }
 
-      return merge(
-        formatAction('upload', 'start', type, name),
-        progress,
-        Promise.resolve().then(async () => {
-          const fetch = await createFetch(refreshToken);
-          const url = await getUploadUrl(fetch, name);
+      const progress = new Subject();
+      const result = AsyncSubject();
+      const resolve = (action) => {
+        result.next(action);
+        result.complete();
+        return action;
+      };
+      const cancel = () => (
+        resolve(formatActionSync('upload', 'cancel', type, name))
+      );
 
-          let chunks = [];
+      // Defered Promise.
+      Promise.resolve().then(async () => {
+        const fetch = await createFetch(refreshToken);
+        const url = await getUploadUrl(fetch, name);
 
-          // Max chunk is 60MB, but OneDrive wants increments of 320KB,
-          // therefor, we will use a maximum of 6553600 bytes per chunk.
+        // Abort the request if it has been canceled.
+        if (result.closed) {
+          return false;
+        }
 
-          // split the file into uploadable chunks if it is smaller than a
-          // single chunk.
-          const MAX = 6553600;
-          if (size <= MAX) {
+        let chunks = [];
+
+        // Max chunk is 60MB, but OneDrive wants increments of 320KB,
+        // therefor, we will use a maximum of 6553600 bytes per chunk.
+
+        // split the file into uploadable chunks if it is smaller than a
+        // single chunk.
+        const MAX = 6553600;
+        if (size <= MAX) {
+          chunks = [
+            {
+              start: 0,
+              end: size > 0 ? size - 1 : 0,
+            },
+          ];
+        } else {
+          const num = Math.ceil(size / MAX);
+          let i = num;
+          let start = 0;
+          let end = MAX - 1;
+          while (i > 0) {
             chunks = [
+              ...chunks,
               {
-                start: 0,
-                end: size > 0 ? size - 1 : 0,
-              },
-            ];
-          } else {
-            const num = Math.ceil(size / MAX);
-            let i = num;
-            let start = 0;
-            let end = MAX - 1;
-            while (i > 0) {
-              chunks = [
-                ...chunks,
-                {
-                  start,
-                  end,
-                },
-              ];
-
-              start += MAX;
-              end += MAX;
-
-              // Do not exceed the end of the file!
-              if (end > size - 1) {
-                end = size - 1;
-              }
-
-              i -= 1;
-            }
-          }
-
-          let i = 0;
-          // eslint-disable-next-line no-restricted-syntax
-          for (const { start, end } of chunks) {
-            progress.next(formatActionSync('upload', 'start', type, name, [i + 1, chunks.length]));
-
-            // Each request must be sync (one after the other). OneDrive does
-            // not allow chunks to be uploaded out of order.
-            // eslint-disable-next-line no-await-in-loop
-            const response = await fetch(url, {
-              method: 'PUT',
-              headers: {
-                'Content-Length': size > 0 ? end - start + 1 : 0,
-                'Content-Range': `bytes ${start}-${end}/${size}`,
-              },
-              body: content({
                 start,
                 end,
-              }),
-            });
+              },
+            ];
 
-            // eslint-disable-next-line no-await-in-loop
-            const data = await response.json();
+            start += MAX;
+            end += MAX;
 
-            // Gracefully handle the error somehow?
-            if (!response.ok) {
-              throw createError(response, data);
+            // Do not exceed the end of the file!
+            if (end > size - 1) {
+              end = size - 1;
             }
 
-            progress.next(formatActionSync('upload', 'end', type, name, [i + 1, chunks.length]));
-            i += 1;
+            i -= 1;
+          }
+        }
+
+        let i = 0;
+        // eslint-disable-next-line no-restricted-syntax
+        for (const { start, end } of chunks) {
+          // If the result is closed, cancel the upload.
+          if (result.closed) {
+            return false;
           }
 
-          progress.complete();
-          return formatAction('upload', 'end', type, name);
-        }),
+          progress.next(formatActionSync('upload', 'start', type, name, [i + 1, chunks.length]));
+
+          // Each request must be sync (one after the other). OneDrive does
+          // not allow chunks to be uploaded out of order.
+          // eslint-disable-next-line no-await-in-loop
+          const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Content-Length': size > 0 ? end - start + 1 : 0,
+              'Content-Range': `bytes ${start}-${end}/${size}`,
+            },
+            body: content({
+              start,
+              end,
+            }),
+          });
+
+          // If the result is closed, cancel the upload. node-fetch does not
+          // support aborting a request, so we'll abort as soon as it's done.
+          if (result.closed) {
+            return false;
+          }
+
+          // eslint-disable-next-line no-await-in-loop
+          const data = await response.json();
+
+          // Gracefully handle the error somehow?
+          if (!response.ok) {
+            throw createError(response, data);
+          }
+
+          progress.next(formatActionSync('upload', 'end', type, name, [i + 1, chunks.length]));
+          i += 1;
+        }
+
+        progress.complete();
+        return resolve(formatActionSync('upload', 'end', type, name));
+      });
+
+      return merge(
+        formatAction('upload', cancel, type, name),
+        progress,
+        result,
       );
     }),
   );
