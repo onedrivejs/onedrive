@@ -4,7 +4,6 @@ const {
   flatMap,
   map,
   filter,
-  share,
 } = require('rxjs/operators');
 const { join } = require('path');
 const { log } = require('../utils/logger');
@@ -172,7 +171,6 @@ const stream = (client, directory) => {
 
       return value;
     }),
-    share(),
   );
 };
 

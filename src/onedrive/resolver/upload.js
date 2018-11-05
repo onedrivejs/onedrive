@@ -4,7 +4,7 @@ const {
   merge,
   EMPTY,
 } = require('rxjs');
-const { flatMap, share } = require('rxjs/operators');
+const { flatMap } = require('rxjs/operators');
 const { basename } = require('path');
 const { DateTime } = require('luxon');
 const getParent = require('./parent');
@@ -201,7 +201,6 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
         result,
       );
     }),
-    share(),
   );
 };
 

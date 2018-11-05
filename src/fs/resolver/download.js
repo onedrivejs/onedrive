@@ -6,7 +6,7 @@ const {
   EMPTY,
   Subject,
 } = require('rxjs');
-const { flatMap, share } = require('rxjs/operators');
+const { flatMap } = require('rxjs/operators');
 const { fromFile: hashFromFile } = require('hasha');
 const {
   ensureDir,
@@ -133,7 +133,6 @@ const downloadFile = (directory, name, hash, modified, downloader) => {
         result,
       );
     }),
-    share(),
   );
 };
 

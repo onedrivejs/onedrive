@@ -9,7 +9,6 @@ const {
   filter,
   delay,
   takeUntil,
-  share,
 } = require('rxjs/operators');
 const createFetch = require('./fetch');
 const createError = require('../utils/error');
@@ -59,7 +58,6 @@ const delta = (refreshToken, driveId, id, cancel = new Subject()) => {
     // Remove the root item.
     filter(item => !('root' in item)),
     filter(item => item.id !== id),
-    share(),
   );
 };
 

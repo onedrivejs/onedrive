@@ -1,4 +1,4 @@
-const { first } = require('rxjs/operators');
+const { take, share } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const { stat, utimes } = require('fs');
 const { move } = require('fs-extra');
@@ -139,12 +139,14 @@ test('download file will cancel', () => {
   // Delay the download by 100ms;
   downloader.mockImplementationOnce(() => timeout(100).then(() => mockResponse));
   const name = 'test.txt';
-  const download = downloadFile('/data', name, 'abcd', DateTime.local(), downloader);
+  const download = downloadFile('/data', name, 'abcd', DateTime.local(), downloader).pipe(
+    share(),
+  );
 
   const result = download.toPromise();
 
   // Cancel the download.
-  download.pipe(first()).subscribe(({ cancel }) => cancel());
+  download.pipe(take(1)).toPromise().then(({ cancel }) => cancel());
 
   return expect(result).resolves.toEqual({
     action: 'download',

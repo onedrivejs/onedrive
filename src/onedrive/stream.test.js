@@ -1,5 +1,5 @@
 const { Subject } = require('rxjs');
-const { take } = require('rxjs/operators');
+const { take, share } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const createStream = require('./stream');
 const createDownload = require('./download');
@@ -23,7 +23,7 @@ test('creating a filesystem stream', () => {
 test('add event', () => {
   const subject = new Subject();
   delta.mockReturnValue(subject);
-  const stream = createStream('1234');
+  const stream = createStream('1234').pipe(share());
 
   const data = Promise.all([
     stream.pipe(take(1)).toPromise(),
@@ -78,7 +78,7 @@ test('add event', () => {
 test('unhandled item type', () => {
   const subject = new Subject();
   delta.mockReturnValue(subject);
-  const stream = createStream('1234');
+  const stream = createStream('1234').pipe(share());
 
   const data = stream.pipe(take(1)).toPromise();
 
@@ -96,7 +96,7 @@ test('unhandled item type', () => {
 test('change event', () => {
   const subject = new Subject();
   delta.mockReturnValue(subject);
-  const stream = createStream('1234');
+  const stream = createStream('1234').pipe(share());
 
   const data = stream.pipe(take(2)).toPromise();
 
@@ -140,7 +140,7 @@ test('change event', () => {
 test('remove event', () => {
   const subject = new Subject();
   delta.mockReturnValue(subject);
-  const stream = createStream('1234');
+  const stream = createStream('1234').pipe(share());
 
   const data = stream.pipe(take(1)).toPromise();
 
@@ -168,7 +168,7 @@ test('remove event', () => {
 test('remove event with non-existant parent', () => {
   const subject = new Subject();
   delta.mockReturnValue(subject);
-  const stream = createStream('1234');
+  const stream = createStream('1234').pipe(share());
 
   const data = stream.pipe(take(2)).toPromise();
 
@@ -203,7 +203,7 @@ test('remove event with non-existant parent', () => {
 test('move event', () => {
   const subject = new Subject();
   delta.mockReturnValue(subject);
-  const stream = createStream('1234');
+  const stream = createStream('1234').pipe(share());
 
   const data = stream.pipe(take(2)).toPromise();
 
@@ -242,7 +242,7 @@ test('move event', () => {
 test('copy event', () => {
   const subject = new Subject();
   delta.mockReturnValue(subject);
-  const stream = createStream('1234');
+  const stream = createStream('1234').pipe(share());
 
   const data = stream.pipe(take(2)).toPromise();
 
@@ -282,7 +282,7 @@ test('copy event', () => {
 test('modified time returns datetime object', () => {
   const subject = new Subject();
   delta.mockReturnValue(subject);
-  const stream = createStream('1234');
+  const stream = createStream('1234').pipe(share());
 
   const data = stream.pipe(take(1)).toPromise();
 
@@ -311,7 +311,7 @@ test('remote item starts new delta', () => {
   const remoteItemSubject = new Subject();
   delta.mockReturnValueOnce(subject);
   delta.mockReturnValueOnce(remoteItemSubject);
-  const stream = createStream('1234');
+  const stream = createStream('1234').pipe(share());
 
   const data = stream.pipe(take(2)).toPromise();
 
@@ -360,7 +360,7 @@ test('remote item is deleted', () => {
   const remoteItemSubject = new Subject();
   delta.mockReturnValueOnce(subject);
   delta.mockReturnValueOnce(remoteItemSubject);
-  const stream = createStream('1234');
+  const stream = createStream('1234').pipe(share());
 
   const data = stream.pipe(take(2)).toPromise();
 

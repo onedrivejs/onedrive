@@ -1,5 +1,5 @@
 const { from, EMPTY } = require('rxjs');
-const { flatMap, share } = require('rxjs/operators');
+const { flatMap } = require('rxjs/operators');
 const copy = require('./copy');
 const upload = require('./upload');
 const createFetch = require('../fetch');
@@ -67,7 +67,6 @@ const copyUploadFile = (refreshToken, name, hash, modified, size, content, fromN
       // Be safe, upload the file.
       return upload(refreshToken, name, hash, modified, size, content);
     }),
-    share(),
   );
 };
 

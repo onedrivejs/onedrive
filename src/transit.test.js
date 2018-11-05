@@ -1,4 +1,5 @@
 const { Subject } = require('rxjs');
+const { share } = require('rxjs/operators');
 const { checkTransit, manageTransit } = require('./transit');
 
 test('adding cancel to transit store and checking it.', () => {
@@ -33,8 +34,8 @@ test('adding cancel to transit store and checking it.', () => {
 });
 
 test('adding cancel to transit store and removing it', () => {
-  const check = (new Subject()).pipe(checkTransit());
-  const manage = (new Subject()).pipe(manageTransit());
+  const check = (new Subject()).pipe(checkTransit(), share());
+  const manage = (new Subject()).pipe(manageTransit(), share());
 
   // Subscribe to the observables.
   check.toPromise();

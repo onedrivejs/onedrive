@@ -1,6 +1,6 @@
 const { join } = require('path');
 const { from, merge } = require('rxjs');
-const { flatMap, catchError, share } = require('rxjs/operators');
+const { flatMap, catchError } = require('rxjs/operators');
 const { fromFile: hashFromFile } = require('hasha');
 const move = require('./move');
 const remove = require('./remove');
@@ -62,7 +62,6 @@ const moveDownload = (directory, type, name, modified, hash, fromName, downloder
       // Some other error we don't know how to deal with.
       throw e;
     }),
-    share(),
   );
 };
 
