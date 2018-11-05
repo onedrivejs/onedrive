@@ -1,5 +1,5 @@
 const { of, concat, Subject } = require('rxjs');
-const { flatMap, map } = require('rxjs/operators');
+const { flatMap, map, share } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const { join } = require('path');
 const delta = require('./delta');
@@ -119,6 +119,7 @@ const stream = (refreshToken) => {
 
       return action;
     }),
+    share(),
   );
 };
 

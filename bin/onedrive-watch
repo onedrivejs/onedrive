@@ -9,7 +9,7 @@ const creatFsStream = require('../src/fs/stream');
 const fsResolver = require('../src/fs/resolver/resolver');
 const createOneDriveStream = require('../src/onedrive/stream');
 const oneDriveResolver = require('../src/onedrive/resolver/resolver');
-const {checkTransit, addTransit} = require('../src/transit');
+const {checkTransit, manageTransit} = require('../src/transit');
 const { log, logAction, logReaction } = require('../src/utils/logger');
 
 // Load the environment variables.
@@ -57,7 +57,7 @@ const watch = () => {
     }),
     checkTransit(),
     fsResolver(directory),
-    addTransit(),
+    manageTransit(),
   ).subscribe((data) => {
     logAction({
       ...data,
@@ -76,7 +76,7 @@ const watch = () => {
     }),
     checkTransit(),
     oneDriveResolver(refreshToken),
-    addTransit(),
+    manageTransit(),
   ).subscribe((data) => {
     logAction({
       ...data,

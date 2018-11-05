@@ -4,9 +4,9 @@ const {
   from,
   merge,
   EMPTY,
-  AsyncSubject,
+  Subject,
 } = require('rxjs');
-const { flatMap } = require('rxjs/operators');
+const { flatMap, share } = require('rxjs/operators');
 const { fromFile: hashFromFile } = require('hasha');
 const {
   ensureDir,
@@ -67,7 +67,7 @@ const downloadFile = (directory, name, hash, modified, downloader) => {
         return EMPTY;
       }
 
-      const result = new AsyncSubject();
+      const result = new Subject();
       const reject = (reason) => {
         result.error(reason);
         result.complete();
@@ -87,7 +87,7 @@ const downloadFile = (directory, name, hash, modified, downloader) => {
 
         // There is no way to abort the download in node-fetch, so abort after
         // it is done.
-        if (result.closed) {
+        if (result.isStopped) {
           return false;
         }
 
@@ -104,7 +104,7 @@ const downloadFile = (directory, name, hash, modified, downloader) => {
         await utimes(tmpPath, new Date(), modified.toJSDate());
 
         // If the request has been aborted, delete the file and end.
-        if (result.closed) {
+        if (result.isStopped) {
           await remove(tmpPath);
           return false;
         }
@@ -133,6 +133,7 @@ const downloadFile = (directory, name, hash, modified, downloader) => {
         result,
       );
     }),
+    share(),
   );
 };
 

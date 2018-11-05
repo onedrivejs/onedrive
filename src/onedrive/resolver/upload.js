@@ -3,9 +3,8 @@ const {
   from,
   merge,
   EMPTY,
-  AsyncSubject,
 } = require('rxjs');
-const { flatMap } = require('rxjs/operators');
+const { flatMap, share } = require('rxjs/operators');
 const { basename } = require('path');
 const { DateTime } = require('luxon');
 const getParent = require('./parent');
@@ -83,7 +82,7 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
       }
 
       const progress = new Subject();
-      const result = new AsyncSubject();
+      const result = new Subject();
       const reject = (reason) => {
         result.error(reason);
         result.complete();
@@ -104,7 +103,7 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
         const url = await getUploadUrl(fetch, name);
 
         // Abort the request if it has been canceled.
-        if (result.closed) {
+        if (result.isStopped) {
           return false;
         }
 
@@ -153,7 +152,7 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
         // eslint-disable-next-line no-restricted-syntax
         for (const { start, end } of chunks) {
           // If the result is closed, cancel the upload.
-          if (result.closed) {
+          if (result.isStopped) {
             return false;
           }
 
@@ -176,7 +175,7 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
 
           // If the result is closed, cancel the upload. node-fetch does not
           // support aborting a request, so we'll abort as soon as it's done.
-          if (result.closed) {
+          if (result.isStopped) {
             return false;
           }
 
@@ -202,6 +201,7 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
         result,
       );
     }),
+    share(),
   );
 };
 

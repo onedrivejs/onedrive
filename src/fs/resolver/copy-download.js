@@ -1,6 +1,6 @@
 const { join } = require('path');
 const { from, EMPTY } = require('rxjs');
-const { flatMap, catchError } = require('rxjs/operators');
+const { flatMap, catchError, share } = require('rxjs/operators');
 const { fromFile: hashFromFile } = require('hasha');
 const copy = require('./copy');
 const download = require('./download');
@@ -53,6 +53,7 @@ const copyDownloadFile = (directory, name, modified, hash, fromName, downloder) 
       // Some other error we don't know how to deal with.
       throw e;
     }),
+    share(),
   );
 };
 

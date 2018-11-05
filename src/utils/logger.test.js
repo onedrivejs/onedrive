@@ -5,6 +5,7 @@ jest.mock('chalk', () => ({
   gray: jest.fn().mockImplementation(text => text),
   green: jest.fn().mockImplementation(text => text),
   yellow: jest.fn().mockImplementation(text => text),
+  magenta: jest.fn().mockImplementation(text => text),
   red: jest.fn().mockImplementation(text => text),
   redBright: jest.fn().mockImplementation(text => text),
   yellowBright: jest.fn().mockImplementation(text => text),
@@ -150,6 +151,18 @@ test('log action removing file onedrive', () => {
   return expect(consoleLog).toHaveBeenCalledWith('Removing file test.txt on OneDrive end');
 });
 
+test('log action upload file onedrive cancel', () => {
+  logAction({
+    action: 'upload',
+    phase: 'cancel',
+    type: 'file',
+    name: 'test.txt',
+    system: 'onedrive',
+  });
+
+  return expect(consoleLog).toHaveBeenCalledWith('Uploading file test.txt to OneDrive cancel');
+});
+
 test('log action upload onedrive', () => {
   logAction({
     action: 'upload',
@@ -161,6 +174,18 @@ test('log action upload onedrive', () => {
   });
 
   return expect(consoleLog).toHaveBeenCalledWith('Uploading file test.txt to OneDrive start chunk 1 of 1');
+});
+
+test('log action upload file onedrive unknown', () => {
+  logAction({
+    action: 'upload',
+    phase: 'unknown',
+    type: 'file',
+    name: 'test.txt',
+    system: 'onedrive',
+  });
+
+  return expect(consoleLog).toHaveBeenCalledWith('Uploading file test.txt to OneDrive unknown');
 });
 
 test('log reaction', () => {

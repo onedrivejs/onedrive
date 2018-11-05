@@ -1,5 +1,5 @@
 const { from, merge } = require('rxjs');
-const { flatMap } = require('rxjs/operators');
+const { flatMap, share } = require('rxjs/operators');
 const createFolder = require('./create');
 const move = require('./move');
 const getParent = require('./parent');
@@ -105,6 +105,7 @@ const moveUpload = (refreshToken, type, name, hash, modified, size, content, fro
         remove(refreshToken, type, fromName),
       );
     }),
+    share(),
   );
 };
 

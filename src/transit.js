@@ -14,14 +14,27 @@ const checkTransit = () => stream => (
   )
 );
 
-const addTransit = () => stream => (
+const manageTransit = () => stream => (
   stream.pipe(
-    tap(({ name, cancel }) => {
-      if (cancel) {
+    tap(({
+      action,
+      name,
+      cancel,
+      phase,
+    }) => {
+      if (!['upload', 'download'].includes(action)) {
+        return;
+      }
+
+      if (phase === 'start' && cancel) {
         transit.set(name, cancel);
+      }
+
+      if (phase === 'end' && transit.has(name)) {
+        transit.delete(name);
       }
     }),
   )
 );
 
-module.exports = { checkTransit, addTransit };
+module.exports = { checkTransit, manageTransit };

@@ -1,6 +1,11 @@
 const { fromEvent, from } = require('rxjs');
 const { DateTime } = require('luxon');
-const { flatMap, map, filter } = require('rxjs/operators');
+const {
+  flatMap,
+  map,
+  filter,
+  share,
+} = require('rxjs/operators');
 const { join } = require('path');
 const { log } = require('../utils/logger');
 const createContent = require('./content');
@@ -167,6 +172,7 @@ const stream = (client, directory) => {
 
       return value;
     }),
+    share(),
   );
 };
 

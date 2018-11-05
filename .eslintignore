@@ -1,0 +1,4 @@
+.env
+coverage/
+data/
+node_modules/

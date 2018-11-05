@@ -3,7 +3,7 @@ const {
   from,
   EMPTY,
 } = require('rxjs');
-const { flatMap, catchError } = require('rxjs/operators');
+const { flatMap, catchError, share } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const { promisify } = require('util');
 const fs = require('fs');
@@ -52,6 +52,7 @@ const cleanTrash = (directory) => {
           catchError(() => EMPTY),
         );
       }),
+      share(),
     ),
     formatAction(action, 'end', type, name),
   );

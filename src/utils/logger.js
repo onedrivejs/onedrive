@@ -74,10 +74,13 @@ const getPhaseText = (phase) => {
 const log = (level, ...message) => {
   switch (level) {
     case 'error':
+      // eslint-disable-next-line no-console
       return console.error(chalk.redBright('ERROR'), ...message);
     case 'warn':
+      // eslint-disable-next-line no-console
       return console.warn(chalk.yellowBright('WARNING'), ...message);
     default:
+      // eslint-disable-next-line no-console
       return console.log(...message);
   }
 };

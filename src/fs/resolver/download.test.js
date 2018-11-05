@@ -1,3 +1,4 @@
+const { first } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const { stat, utimes } = require('fs');
 const { move } = require('fs-extra');
@@ -5,22 +6,28 @@ const { fromFile: hashFromFile } = require('hasha');
 const promisePipe = require('promisepipe');
 const downloadFile = require('./download');
 
+const timeout = ms => (
+  new Promise(resolve => setTimeout(resolve, ms))
+);
+
 jest.mock('fs');
 jest.mock('graceful-fs', () => jest.mock('fs'));
 jest.mock('fs-extra');
 jest.mock('hasha');
 jest.mock('promisepipe');
 jest.mock('stream');
+jest.useRealTimers();
 
 hashFromFile.mockResolvedValue('');
 
-const downloader = jest.fn()
-  .mockResolvedValue({
-    ok: true,
-    body: {
-      pipe: jest.fn(),
-    },
-  });
+const mockResponse = {
+  ok: true,
+  body: {
+    pipe: jest.fn(),
+  },
+};
+
+const downloader = jest.fn(() => Promise.resolve(mockResponse));
 
 const mockStats = jest.fn().mockResolvedValue({});
 stat.mockImplementation((path, options, callback) => {
@@ -126,4 +133,23 @@ test('download file will throw error', () => {
   const result = downloadFile('/data', name, 'abcd', DateTime.local(), downloader).toPromise();
 
   return expect(result).rejects.toEqual(error);
+});
+
+test('download file will cancel', () => {
+  // Delay the download by 100ms;
+  downloader.mockImplementationOnce(() => timeout(100).then(() => mockResponse));
+  const name = 'test.txt';
+  const download = downloadFile('/data', name, 'abcd', DateTime.local(), downloader);
+
+  const result = download.toPromise();
+
+  // Cancel the download.
+  download.pipe(first()).subscribe(({ cancel }) => cancel());
+
+  return expect(result).resolves.toEqual({
+    action: 'download',
+    phase: 'cancel',
+    type: 'file',
+    name,
+  });
 });
