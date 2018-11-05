@@ -10,6 +10,7 @@ const util = require('util');
 const fs = require('fs');
 const path = require('path');
 const client = require('../src/onedrive/client');
+const packageData = require('../package.json');
 
 const { createReadStream } = fs;
 const writeFile = util.promisify(fs.writeFile);
@@ -21,6 +22,7 @@ dotenv.load();
 if (process.env.SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
+    release: `${packageData.name}@${packageData.version}`,
   });
 }
 

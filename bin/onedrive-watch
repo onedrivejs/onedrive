@@ -9,8 +9,9 @@ const creatFsStream = require('../src/fs/stream');
 const fsResolver = require('../src/fs/resolver/resolver');
 const createOneDriveStream = require('../src/onedrive/stream');
 const oneDriveResolver = require('../src/onedrive/resolver/resolver');
-const {checkTransit, manageTransit} = require('../src/transit');
+const { checkTransit, manageTransit } = require('../src/transit');
 const { log, logAction, logReaction } = require('../src/utils/logger');
+const packageData = require('../package.json');
 
 // Load the environment variables.
 dotenv.load();
@@ -19,6 +20,7 @@ dotenv.load();
 if (process.env.SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
+    release: `${packageData.name}@${packageData.version}`,
   });
 }
 
