@@ -102,7 +102,8 @@ test('log action upload onedrive', () => {
 });
 
 test('log action error', () => {
-  const error = new Error();
+  const msg = 'ERROR';
+  const error = new Error(msg);
   logAction({
     action: 'upload',
     phase: 'error',
@@ -112,7 +113,7 @@ test('log action error', () => {
     error,
   });
 
-  return expect(consoleWarn).toHaveBeenCalledWith('WARNING', `Uploading file test.txt to OneDrive${EOL}`, error);
+  return expect(consoleWarn).toHaveBeenCalledWith('WARNING', `Uploading file test.txt to OneDrive${EOL}`, msg);
 });
 
 test('log action clean trash', () => {

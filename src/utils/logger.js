@@ -97,7 +97,7 @@ const logAction = ({
   const fileNameText = chalk.gray(name);
 
   if (phase === 'error') {
-    return log('warn', `${getActionName(action)} ${type} ${fileNameText} ${getPreposition(action)} ${getSystemName(system)}${EOL}`, error);
+    return log('warn', `${getActionName(action)} ${type} ${fileNameText} ${getPreposition(action)} ${getSystemName(system)}${EOL}`, error.message);
   }
 
   if (chunk) {

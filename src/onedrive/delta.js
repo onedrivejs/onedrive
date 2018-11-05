@@ -31,7 +31,7 @@ const delta = (refreshToken, driveId, id, cancel = new Subject()) => {
         .then(fetch => fetch(url))
         .then((response) => {
           if (!response.ok) {
-            log('warn', createError(response));
+            log('warn', createError(response).message);
             return Promise.resolve({
               '@odata.deltaLink': url,
             });
