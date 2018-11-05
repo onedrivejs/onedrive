@@ -16,9 +16,10 @@ jest.mock('fs-extra');
 jest.mock('hasha');
 jest.mock('promisepipe');
 jest.mock('stream');
-jest.useRealTimers();
 
 hashFromFile.mockResolvedValue('');
+// promisePipe.mockResolvedValue(undefined);
+promisePipe.mockResolvedValue(undefined);
 
 const mockResponse = {
   ok: true,
@@ -27,7 +28,7 @@ const mockResponse = {
   },
 };
 
-const downloader = jest.fn(() => Promise.resolve(mockResponse));
+const downloader = jest.fn().mockResolvedValue(mockResponse);
 
 const mockStats = jest.fn().mockResolvedValue({});
 stat.mockImplementation((path, options, callback) => {
@@ -136,8 +137,6 @@ test('download file will throw error', () => {
 });
 
 test('download file will cancel', () => {
-  // Delay the download by 100ms;
-  downloader.mockImplementationOnce(() => timeout(100).then(() => mockResponse));
   const name = 'test.txt';
   const download = downloadFile('/data', name, 'abcd', DateTime.local(), downloader).pipe(
     share(),
@@ -146,7 +145,27 @@ test('download file will cancel', () => {
   const result = download.toPromise();
 
   // Cancel the download.
-  download.pipe(take(1)).toPromise().then(({ cancel }) => cancel());
+  download.pipe(take(1)).subscribe(({ cancel }) => cancel());
+
+  return expect(result).resolves.toEqual({
+    action: 'download',
+    phase: 'cancel',
+    type: 'file',
+    name,
+  });
+});
+
+test('download file will cancel while pipping', () => {
+  const name = 'test.txt';
+  const download = downloadFile('/data', name, 'abcd', DateTime.local(), downloader).pipe(
+    share(),
+  );
+
+  const result = download.toPromise();
+
+  // Cancel the download.
+  // @TODO Figure out how to throw the cancel during pipping!
+  download.pipe(take(1)).subscribe(({ cancel }) => cancel());
 
   return expect(result).resolves.toEqual({
     action: 'download',
