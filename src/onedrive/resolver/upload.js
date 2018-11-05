@@ -85,11 +85,13 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
       const result = new Subject();
       const reject = (reason) => {
         result.error(reason);
+        progress.complete();
         result.complete();
         return reason;
       };
       const resolve = (action) => {
         result.next(action);
+        progress.complete();
         result.complete();
         return action;
       };
@@ -151,11 +153,6 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
         let i = 0;
         // eslint-disable-next-line no-restricted-syntax
         for (const { start, end } of chunks) {
-          // If the result is closed, cancel the upload.
-          if (result.isStopped) {
-            return false;
-          }
-
           progress.next(formatActionSync('upload', 'start', type, name, [i + 1, chunks.length]));
 
           // Each request must be sync (one after the other). OneDrive does
@@ -173,12 +170,6 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
             }),
           });
 
-          // If the result is closed, cancel the upload. node-fetch does not
-          // support aborting a request, so we'll abort as soon as it's done.
-          if (result.isStopped) {
-            return false;
-          }
-
           // eslint-disable-next-line no-await-in-loop
           const data = await response.json();
 
@@ -188,10 +179,16 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
           }
 
           progress.next(formatActionSync('upload', 'end', type, name, [i + 1, chunks.length]));
+
+          // If the result is closed, cancel the upload if it isn't already
+          // finished.
+          if (result.isStopped && i + 1 !== chunks.length) {
+            return false;
+          }
+
           i += 1;
         }
 
-        progress.complete();
         return resolve(formatActionSync('upload', 'end', type, name));
       }).catch(e => reject(e));
 

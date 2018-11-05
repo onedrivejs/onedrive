@@ -1,7 +1,7 @@
 const { take, share } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const { stat, utimes } = require('fs');
-const { move } = require('fs-extra');
+const { move, remove } = require('fs-extra');
 const { fromFile: hashFromFile } = require('hasha');
 const promisePipe = require('promisepipe');
 const downloadFile = require('./download');
@@ -156,6 +156,8 @@ test('download file will cancel', () => {
 });
 
 test('download file will cancel while pipping', () => {
+  // Delay the promise pipe.
+  promisePipe.mockImplementationOnce(() => timeout(10).then(() => undefined));
   const name = 'test.txt';
   const download = downloadFile('/data', name, 'abcd', DateTime.local(), downloader).pipe(
     share(),
@@ -164,13 +166,16 @@ test('download file will cancel while pipping', () => {
   const result = download.toPromise();
 
   // Cancel the download.
-  // @TODO Figure out how to throw the cancel during pipping!
-  download.pipe(take(1)).subscribe(({ cancel }) => cancel());
+  download.pipe(take(1)).toPromise().then(({ cancel }) => timeout(5).then(() => cancel()));
 
-  return expect(result).resolves.toEqual({
-    action: 'download',
-    phase: 'cancel',
-    type: 'file',
-    name,
+  // Ensure that everything is done before assertions.
+  return timeout(15).then(() => {
+    expect(remove).toBeCalled();
+    expect(result).resolves.toEqual({
+      action: 'download',
+      phase: 'cancel',
+      type: 'file',
+      name,
+    });
   });
 });

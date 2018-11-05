@@ -1,3 +1,4 @@
+const { take, share } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const fetchItem = require('./item');
 const createFetch = require('../fetch');
@@ -9,6 +10,10 @@ jest.mock('../fetch');
 jest.mock('./parent');
 jest.mock('./item');
 jest.mock('fs');
+
+const timeout = ms => (
+  new Promise(resolve => setTimeout(resolve, ms))
+);
 
 const mockJsonValue = {
   parentReference: {
@@ -181,5 +186,49 @@ test('upload file empty', () => {
     phase: 'end',
     type: 'file',
     name,
+  });
+});
+
+test('upload file will cancel', () => {
+  const name = 'test.txt';
+  const upload = uploadFile('1234', 'test.txt', 'abcd', DateTime.local(), 128, content).pipe(
+    share(),
+  );
+
+  const result = upload.toPromise();
+
+  // Cancel the download.
+  upload.pipe(take(1)).subscribe(({ cancel }) => cancel());
+
+  return expect(result).resolves.toEqual({
+    action: 'upload',
+    phase: 'cancel',
+    type: 'file',
+    name,
+  });
+});
+
+test('upload large file will cancel', () => {
+  fetch.mockResolvedValueOnce(mockFetchValue);
+  fetch.mockResolvedValueOnce(mockFetchValue);
+  fetch.mockImplementationOnce(() => timeout(10).then(() => mockFetchValue));
+  const name = 'test.txt';
+  const upload = uploadFile('1234', 'test.txt', 'abcd', DateTime.local(), 104857600, content).pipe(
+    share(),
+  );
+
+  const result = upload.toPromise();
+
+  // Cancel the download.
+  upload.pipe(take(1)).toPromise().then(({ cancel }) => timeout(5).then(() => cancel()));
+
+  // Ensure that everything is done before assertions.
+  return timeout(50).then(() => {
+    expect(result).resolves.toEqual({
+      action: 'upload',
+      phase: 'cancel',
+      type: 'file',
+      name,
+    });
   });
 });
