@@ -1,7 +1,7 @@
 const { Client } = require('fb-watchman');
 const EventEmitter = require('events');
 const { DateTime } = require('luxon');
-const { take } = require('rxjs/operators');
+const { take, share } = require('rxjs/operators');
 const createStream = require('./stream');
 
 jest.mock('fb-watchman');
@@ -34,7 +34,7 @@ test('creating a filesystem stream error', () => {
 
 test('add event', () => {
   const client = new Client();
-  const stream = createStream(client, 'data');
+  const stream = createStream(client, 'data').pipe(share());
 
   const data = Promise.all([
     stream.pipe(take(1)).toPromise(),
@@ -132,7 +132,7 @@ test('add event', () => {
 
 test('change event', () => {
   const client = new Client();
-  const stream = createStream(client, 'data');
+  const stream = createStream(client, 'data').pipe(share());
   const data = stream.pipe(take(1)).toPromise();
 
   client.emit('subscription', {
@@ -162,7 +162,7 @@ test('change event', () => {
 
 test('remove event', () => {
   const client = new Client();
-  const stream = createStream(client, 'data');
+  const stream = createStream(client, 'data').pipe(share());
   const data = stream.pipe(take(1)).toPromise();
 
   client.emit('subscription', {
@@ -193,7 +193,7 @@ test('remove event', () => {
 
 test('move event', () => {
   const client = new Client();
-  const stream = createStream(client, 'data');
+  const stream = createStream(client, 'data').pipe(share());
   const data = stream.pipe(take(1)).toPromise();
 
   client.emit('subscription', {
@@ -232,7 +232,7 @@ test('move event', () => {
 
 test('copy event', () => {
   const client = new Client();
-  const stream = createStream(client, 'data');
+  const stream = createStream(client, 'data').pipe(share());
   const data = stream.pipe(take(2)).toPromise();
 
   client.emit('subscription', {
@@ -276,7 +276,7 @@ test('copy event', () => {
 
 test('bogus file type', () => {
   const client = new Client();
-  const stream = createStream(client, 'data');
+  const stream = createStream(client, 'data').pipe(share());
   const data = stream.pipe(take(1)).toPromise();
 
   client.emit('subscription', {
@@ -306,7 +306,7 @@ test('bogus file type', () => {
 
 test('two changes to the same file', () => {
   const client = new Client();
-  const stream = createStream(client, 'data');
+  const stream = createStream(client, 'data').pipe(share());
   const data = Promise.all([
     stream.pipe(take(1)).toPromise(),
     stream.pipe(take(2)).toPromise(),
@@ -355,7 +355,7 @@ test('two changes to the same file', () => {
 
 test('modified time returns datetime object', () => {
   const client = new Client();
-  const stream = createStream(client, 'data');
+  const stream = createStream(client, 'data').pipe(share());
   const data = stream.pipe(take(1)).toPromise();
 
   client.emit('subscription', {

@@ -41,7 +41,7 @@
     "onedrive": "bin/onedrive"
   },
   "scripts": {
-    "test": "jest"
+    "test": "eslint . && jest"
   },
   "jest": {
     "roots": [

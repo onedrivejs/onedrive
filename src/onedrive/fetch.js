@@ -16,7 +16,7 @@ const createFetch = async (refreshToken) => {
       }).refresh();
     } catch (e) {
       const time = (2 ** iteration) * 1000;
-      log('warn', e);
+      log('warn', e.message);
       await timeout(time);
       return fetchAccessToken(iteration + 1);
     }
@@ -38,14 +38,14 @@ const createFetch = async (refreshToken) => {
 
       if (response.status === 429) {
         const time = parseInt(response.headers.get('Retry-After'), 10) * 1000;
-        log('warn', createError(response));
+        log('warn', createError(response).message);
         await timeout(time);
         return fetchRequest(input, init, iteration + 1);
       }
 
       if (response.status >= 500) {
         const time = (2 ** iteration) * 1000;
-        log('warn', createError(response));
+        log('warn', createError(response).message);
         await timeout(time);
         return fetchRequest(input, init, iteration + 1);
       }
@@ -53,7 +53,7 @@ const createFetch = async (refreshToken) => {
       return response;
     } catch (e) {
       const time = (2 ** iteration) * 1000;
-      log('warn', e);
+      log('warn', e.message);
       await timeout(time);
       return fetchRequest(input, init, iteration + 1);
     }

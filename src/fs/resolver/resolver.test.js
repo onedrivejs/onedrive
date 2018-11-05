@@ -1,5 +1,5 @@
 const { Subject, from } = require('rxjs');
-const { take } = require('rxjs/operators');
+const { take, share } = require('rxjs/operators');
 const { formatAction } = require('../../utils/format-action');
 const createFolder = require('./create');
 const moveDownload = require('./move-download');
@@ -44,7 +44,7 @@ cleanTrash.mockImplementation(() => from([
 
 test('resolver add folder', () => {
   const oneDriveStream = new Subject();
-  const fsResolver = resolver('/data')(oneDriveStream);
+  const fsResolver = resolver('/data')(oneDriveStream).pipe(share());
   const result = Promise.all([
     fsResolver.pipe(take(1)).toPromise(),
     fsResolver.pipe(take(2)).toPromise(),
@@ -79,7 +79,7 @@ test('resolver add folder', () => {
 
 test('resolver add file', () => {
   const oneDriveStream = new Subject();
-  const fsResolver = resolver('/data')(oneDriveStream);
+  const fsResolver = resolver('/data')(oneDriveStream).pipe(share());
   const result = Promise.all([
     fsResolver.pipe(take(1)).toPromise(),
     fsResolver.pipe(take(2)).toPromise(),
@@ -110,7 +110,7 @@ test('resolver add file', () => {
 
 test('resolver move file', () => {
   const oneDriveStream = new Subject();
-  const fsResolver = resolver('/data')(oneDriveStream);
+  const fsResolver = resolver('/data')(oneDriveStream).pipe(share());
   const result = Promise.all([
     fsResolver.pipe(take(1)).toPromise(),
     fsResolver.pipe(take(2)).toPromise(),
@@ -138,7 +138,7 @@ test('resolver move file', () => {
 
 test('resolver copy file', () => {
   const oneDriveStream = new Subject();
-  const fsResolver = resolver('/data')(oneDriveStream);
+  const fsResolver = resolver('/data')(oneDriveStream).pipe(share());
   const result = Promise.all([
     fsResolver.pipe(take(1)).toPromise(),
     fsResolver.pipe(take(2)).toPromise(),
@@ -165,17 +165,12 @@ test('resolver copy file', () => {
 });
 
 test('resolver copy file download', () => {
-  // @TODO Why does this execute twice?
-  copyDownloadFile.mockImplementationOnce((directory, name) => from([
-    formatAction('download', 'start', 'file', name),
-    formatAction('download', 'end', 'file', name),
-  ]));
   copyDownloadFile.mockImplementationOnce((directory, name) => from([
     formatAction('download', 'start', 'file', name),
     formatAction('download', 'end', 'file', name),
   ]));
   const oneDriveStream = new Subject();
-  const fsResolver = resolver('/data')(oneDriveStream);
+  const fsResolver = resolver('/data')(oneDriveStream).pipe(share());
   const result = Promise.all([
     fsResolver.pipe(take(1)).toPromise(),
     fsResolver.pipe(take(2)).toPromise(),
@@ -206,7 +201,7 @@ test('resolver copy file download', () => {
 
 test('resolver remove file', () => {
   const oneDriveStream = new Subject();
-  const fsResolver = resolver('/data')(oneDriveStream);
+  const fsResolver = resolver('/data')(oneDriveStream).pipe(share());
   const result = Promise.all([
     fsResolver.pipe(take(1)).toPromise(),
     fsResolver.pipe(take(2)).toPromise(),

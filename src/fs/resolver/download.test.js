@@ -1,9 +1,14 @@
+const { take, share } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const { stat, utimes } = require('fs');
-const { move } = require('fs-extra');
+const { move, remove } = require('fs-extra');
 const { fromFile: hashFromFile } = require('hasha');
 const promisePipe = require('promisepipe');
 const downloadFile = require('./download');
+
+const timeout = ms => (
+  new Promise(resolve => setTimeout(resolve, ms))
+);
 
 jest.mock('fs');
 jest.mock('graceful-fs', () => jest.mock('fs'));
@@ -13,14 +18,17 @@ jest.mock('promisepipe');
 jest.mock('stream');
 
 hashFromFile.mockResolvedValue('');
+// promisePipe.mockResolvedValue(undefined);
+promisePipe.mockResolvedValue(undefined);
 
-const downloader = jest.fn()
-  .mockResolvedValue({
-    ok: true,
-    body: {
-      pipe: jest.fn(),
-    },
-  });
+const mockResponse = {
+  ok: true,
+  body: {
+    pipe: jest.fn(),
+  },
+};
+
+const downloader = jest.fn().mockResolvedValue(mockResponse);
 
 const mockStats = jest.fn().mockResolvedValue({});
 stat.mockImplementation((path, options, callback) => {
@@ -126,4 +134,48 @@ test('download file will throw error', () => {
   const result = downloadFile('/data', name, 'abcd', DateTime.local(), downloader).toPromise();
 
   return expect(result).rejects.toEqual(error);
+});
+
+test('download file will cancel', () => {
+  const name = 'test.txt';
+  const download = downloadFile('/data', name, 'abcd', DateTime.local(), downloader).pipe(
+    share(),
+  );
+
+  const result = download.toPromise();
+
+  // Cancel the download.
+  download.pipe(take(1)).subscribe(({ cancel }) => cancel());
+
+  return expect(result).resolves.toEqual({
+    action: 'download',
+    phase: 'cancel',
+    type: 'file',
+    name,
+  });
+});
+
+test('download file will cancel while pipping', () => {
+  // Delay the promise pipe.
+  promisePipe.mockImplementationOnce(() => timeout(10).then(() => undefined));
+  const name = 'test.txt';
+  const download = downloadFile('/data', name, 'abcd', DateTime.local(), downloader).pipe(
+    share(),
+  );
+
+  const result = download.toPromise();
+
+  // Cancel the download.
+  download.pipe(take(1)).toPromise().then(({ cancel }) => timeout(5).then(() => cancel()));
+
+  // Ensure that everything is done before assertions.
+  return timeout(15).then(() => {
+    expect(remove).toBeCalled();
+    expect(result).resolves.toEqual({
+      action: 'download',
+      phase: 'cancel',
+      type: 'file',
+      name,
+    });
+  });
 });

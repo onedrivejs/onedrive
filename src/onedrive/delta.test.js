@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 const { Observable } = require('rxjs');
-const { take } = require('rxjs/operators');
+const { take, share } = require('rxjs/operators');
 const delta = require('./delta');
 const createFetch = require('./fetch');
 
@@ -29,7 +29,7 @@ test('resolves the first response immediatly', () => {
   });
   createFetch.mockResolvedValue(fetch);
 
-  const stream = delta('1234');
+  const stream = delta('1234').pipe(share());
 
   expect(stream).toBeInstanceOf(Observable);
 
@@ -132,7 +132,7 @@ test('reject when no next or delta link is present', () => {
   });
   createFetch.mockResolvedValue(fetch);
 
-  const stream = delta('1234');
+  const stream = delta('1234').pipe(share());
   const data = stream.pipe(take(1)).toPromise();
 
   return expect(data).rejects.toEqual(new Error('OneDrive API did not return a nextLink or deltaLink'));
@@ -154,7 +154,7 @@ test('delta with drive id and item id', () => {
   });
   createFetch.mockResolvedValue(fetch);
 
-  const stream = delta('sdsdkfd', 'abcd', '1234');
+  const stream = delta('sdsdkfd', 'abcd', '1234').pipe(share());
 
   expect(stream).toBeInstanceOf(Observable);
 

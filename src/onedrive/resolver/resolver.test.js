@@ -1,5 +1,5 @@
 const { Subject, from } = require('rxjs');
-const { take } = require('rxjs/operators');
+const { take, share } = require('rxjs/operators');
 const { formatAction } = require('../../utils/format-action');
 const createFolder = require('./create');
 const uploadFile = require('./upload');
@@ -43,7 +43,7 @@ remove.mockImplementation((refreshToken, type, name) => from([
 
 test('resolver add folder', () => {
   const fsStream = new Subject();
-  const oneDriveResolver = resolver('abcd')(fsStream);
+  const oneDriveResolver = resolver('abcd')(fsStream).pipe(share());
   const result = Promise.all([
     oneDriveResolver.pipe(take(1)).toPromise(),
     oneDriveResolver.pipe(take(2)).toPromise(),
@@ -79,7 +79,7 @@ test('resolver add folder', () => {
 
 test('resolver upload file', () => {
   const fsStream = new Subject();
-  const oneDriveResolver = resolver('abcd')(fsStream);
+  const oneDriveResolver = resolver('abcd')(fsStream).pipe(share());
   const result = Promise.all([
     oneDriveResolver.pipe(take(1)).toPromise(),
     oneDriveResolver.pipe(take(2)).toPromise(),
@@ -115,7 +115,7 @@ test('resolver upload file', () => {
 
 test('resolver move file', () => {
   const fsStream = new Subject();
-  const oneDriveResolver = resolver('abcd')(fsStream);
+  const oneDriveResolver = resolver('abcd')(fsStream).pipe(share());
   const result = Promise.all([
     oneDriveResolver.pipe(take(1)).toPromise(),
     oneDriveResolver.pipe(take(2)).toPromise(),
@@ -150,7 +150,7 @@ test('resolver move file', () => {
 
 test('resolver copy file', () => {
   const fsStream = new Subject();
-  const oneDriveResolver = resolver('abcd')(fsStream);
+  const oneDriveResolver = resolver('abcd')(fsStream).pipe(share());
   const result = Promise.all([
     oneDriveResolver.pipe(take(1)).toPromise(),
     oneDriveResolver.pipe(take(2)).toPromise(),
@@ -185,7 +185,7 @@ test('resolver copy file', () => {
 
 test('resolver remove file', () => {
   const fsStream = new Subject();
-  const oneDriveResolver = resolver('abcd')(fsStream);
+  const oneDriveResolver = resolver('abcd')(fsStream).pipe(share());
   const result = Promise.all([
     oneDriveResolver.pipe(take(1)).toPromise(),
     oneDriveResolver.pipe(take(2)).toPromise(),
