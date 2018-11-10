@@ -3,10 +3,9 @@ const { tmpdir } = require('os');
 const {
   from,
   merge,
-  EMPTY,
   Subject,
 } = require('rxjs');
-const { flatMap } = require('rxjs/operators');
+const { flatMap, filter } = require('rxjs/operators');
 const { fromFile: hashFromFile } = require('hasha');
 const {
   ensureDir,
@@ -20,12 +19,14 @@ const { promisify } = require('util');
 const promisePipe = require('promisepipe');
 const { PassThrough } = require('stream');
 const { monotonicFactory } = require('ulid');
+const createSeparator = require('../../separator');
 const createError = require('../../utils/error');
 const { formatAction, formatActionSync } = require('../../utils/format-action');
 
 const ulid = monotonicFactory();
 const stat = promisify(fs.stat);
 const utimes = promisify(fs.utimes);
+const separator = createSeparator();
 
 const shouldDownloadFile = async (directory, name, hash, modified) => {
   const path = join(directory, name);
@@ -62,11 +63,9 @@ const downloadFile = (directory, name, hash, modified, downloader) => {
   const path = join(directory, name);
 
   return from(shouldDownloadFile(directory, name, hash, modified)).pipe(
-    flatMap((should) => {
-      if (!should) {
-        return EMPTY;
-      }
-
+    filter(should => !!should),
+    separator,
+    flatMap(() => {
       const result = new Subject();
       const reject = (reason) => {
         result.error(reason);

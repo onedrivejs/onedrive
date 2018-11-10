@@ -2,16 +2,18 @@ const {
   Subject,
   from,
   merge,
-  EMPTY,
 } = require('rxjs');
-const { flatMap } = require('rxjs/operators');
+const { flatMap, filter } = require('rxjs/operators');
 const { basename } = require('path');
 const { DateTime } = require('luxon');
 const getParent = require('./parent');
 const fetchItem = require('./item');
 const createFetch = require('../fetch');
+const createSeparator = require('../../separator');
 const createError = require('../../utils/error');
 const { formatAction, formatActionSync } = require('../../utils/format-action');
+
+const separator = createSeparator();
 
 const shouldUploadFile = async (refreshToken, name, hash, modified) => {
   const fetch = await createFetch(refreshToken);
@@ -76,11 +78,9 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
   const type = 'file';
 
   return from(shouldUploadFile(refreshToken, name, hash, modified)).pipe(
-    flatMap((should) => {
-      if (!should) {
-        return EMPTY;
-      }
-
+    filter(should => !!should),
+    separator,
+    flatMap(() => {
       const progress = new Subject();
       const result = new Subject();
       const reject = (reason) => {
