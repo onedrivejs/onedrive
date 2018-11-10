@@ -1,6 +1,6 @@
 const {
   Subject,
-  BehaviorSubject,
+  of,
   from,
   merge,
 } = require('rxjs');
@@ -19,12 +19,14 @@ const delta = (refreshToken, driveId, id, cancel = new Subject()) => {
   if (id && driveId) {
     link = `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${id}/delta`;
   }
-  const nextLink = new BehaviorSubject(link);
+  const nextLink = (new Subject()).pipe(
+    delay(10000),
+  );
   const deltaLink = (new Subject()).pipe(
     delay(60000),
   );
 
-  return merge(nextLink, deltaLink).pipe(
+  return merge(of(link), nextLink, deltaLink).pipe(
     takeUntil(cancel),
     flatMap(url => (
       createFetch(refreshToken)
