@@ -14,6 +14,6 @@ test('stream separator', () => {
   expect(setInterval).toHaveBeenCalledTimes(1);
 
   jest.runAllTimers();
-  
+
   return results;
 });
