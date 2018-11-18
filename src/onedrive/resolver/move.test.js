@@ -1,6 +1,10 @@
 const fetchItem = require('./item');
 const getParent = require('./parent');
 const createFetch = require('../fetch');
+const createSeparator = require('../../separator');
+
+createSeparator.mockReturnValue(jest.fn(stream => stream));
+
 const move = require('./move');
 
 jest.mock('node-fetch');
@@ -8,6 +12,7 @@ jest.mock('../fetch');
 jest.mock('./parent');
 jest.mock('./item');
 jest.mock('fs');
+jest.mock('../../separator');
 
 const mockFrom = {
   id: '123',

@@ -1,9 +1,14 @@
 const fetchItem = require('./item');
 const createFetch = require('../fetch');
+const createSeparator = require('../../separator');
+
+createSeparator.mockReturnValue(jest.fn(stream => stream));
+
 const remove = require('./remove');
 
 jest.mock('./item');
 jest.mock('../fetch');
+jest.mock('../../separator');
 
 const mockJsonValue = {
   id: '123',

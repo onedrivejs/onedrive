@@ -4,6 +4,10 @@ const { stat, utimes } = require('fs');
 const { move, remove } = require('fs-extra');
 const { fromFile: hashFromFile } = require('hasha');
 const promisePipe = require('promisepipe');
+const createSeparator = require('../../separator');
+
+createSeparator.mockReturnValue(jest.fn(stream => stream));
+
 const downloadFile = require('./download');
 
 const timeout = ms => (
@@ -16,6 +20,7 @@ jest.mock('fs-extra');
 jest.mock('hasha');
 jest.mock('promisepipe');
 jest.mock('stream');
+jest.mock('../../separator');
 
 hashFromFile.mockResolvedValue('');
 // promisePipe.mockResolvedValue(undefined);
