@@ -8,6 +8,8 @@ jest.mock('../fetch');
 jest.mock('./parent');
 jest.mock('./item');
 jest.mock('fs');
+jest.mock('../../separator', () => () => jest.fn(stream => stream));
+
 
 const mockFrom = {
   id: '123',

@@ -1,9 +1,11 @@
-const createFolder = require('./create');
 const createFetch = require('../fetch');
 const ensureDir = require('./ensure-dir');
+const createFolder = require('./create');
 
 jest.mock('./ensure-dir');
 jest.mock('../fetch');
+jest.mock('../../separator', () => () => jest.fn(stream => stream));
+
 jest.useFakeTimers();
 
 const fetch = jest.fn();

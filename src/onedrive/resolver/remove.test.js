@@ -4,6 +4,7 @@ const remove = require('./remove');
 
 jest.mock('./item');
 jest.mock('../fetch');
+jest.mock('../../separator', () => () => jest.fn(stream => stream));
 
 const mockJsonValue = {
   id: '123',

@@ -1,5 +1,4 @@
 const { DateTime } = require('luxon');
-const moveUpload = require('./move-upload');
 const createFolder = require('./create');
 const move = require('./move');
 const remove = require('./remove');
@@ -7,6 +6,7 @@ const upload = require('./upload');
 const getParent = require('./parent');
 const createFetch = require('../fetch');
 const fetchItem = require('./item');
+const moveUpload = require('./move-upload');
 
 jest.mock('./move');
 jest.mock('./upload');
@@ -15,6 +15,7 @@ jest.mock('./create');
 jest.mock('../fetch');
 jest.mock('./item');
 jest.mock('./parent');
+jest.mock('../../separator', () => () => jest.fn(stream => stream));
 
 const mockParent = {
   id: '123',
