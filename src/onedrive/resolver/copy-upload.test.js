@@ -3,17 +3,13 @@ const copy = require('./copy');
 const upload = require('./upload');
 const createFetch = require('../fetch');
 const fetchItem = require('./item');
-const createSeparator = require('../../separator');
-
-createSeparator.mockReturnValue(jest.fn(stream => stream));
-
 const copyUploadFile = require('./copy-upload');
 
 jest.mock('./copy');
 jest.mock('./upload');
 jest.mock('../fetch');
 jest.mock('./item');
-jest.mock('../../separator');
+jest.mock('../../separator', () => () => jest.fn(stream => stream));
 
 copy.mockResolvedValue(true);
 upload.mockResolvedValue(false);

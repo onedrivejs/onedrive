@@ -3,10 +3,6 @@ const { DateTime } = require('luxon');
 const fetchItem = require('./item');
 const createFetch = require('../fetch');
 const getParent = require('./parent');
-const createSeparator = require('../../separator');
-
-createSeparator.mockReturnValue(jest.fn(stream => stream));
-
 const uploadFile = require('./upload');
 
 jest.mock('node-fetch');
@@ -14,7 +10,7 @@ jest.mock('../fetch');
 jest.mock('./parent');
 jest.mock('./item');
 jest.mock('fs');
-jest.mock('../../separator');
+jest.mock('../../separator', () => () => jest.fn(stream => stream));
 
 const timeout = ms => (
   new Promise(resolve => setTimeout(resolve, ms))

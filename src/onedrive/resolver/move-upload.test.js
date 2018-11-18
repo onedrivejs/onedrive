@@ -6,10 +6,6 @@ const upload = require('./upload');
 const getParent = require('./parent');
 const createFetch = require('../fetch');
 const fetchItem = require('./item');
-const createSeparator = require('../../separator');
-
-createSeparator.mockReturnValue(jest.fn(stream => stream));
-
 const moveUpload = require('./move-upload');
 
 jest.mock('./move');
@@ -19,7 +15,7 @@ jest.mock('./create');
 jest.mock('../fetch');
 jest.mock('./item');
 jest.mock('./parent');
-jest.mock('../../separator');
+jest.mock('../../separator', () => () => jest.fn(stream => stream));
 
 const mockParent = {
   id: '123',
