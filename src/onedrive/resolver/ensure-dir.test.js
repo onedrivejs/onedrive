@@ -23,6 +23,15 @@ const mockFetchResult = {
 const fetch = jest.fn().mockResolvedValue(mockFetchResult);
 
 test('creates a folder in the root', () => {
+  fetch.mockResolvedValueOnce({
+    ok: false,
+    status: 404,
+    json: jest.fn().mockResolvedValue({}),
+  });
+  mockJson.mockResolvedValueOnce({
+    ...mockJsonResult,
+    folder: {},
+  });
   const name = 'test';
   const result = ensureDir(fetch, name);
 
@@ -33,6 +42,11 @@ test('creates a folder in the root', () => {
 });
 
 test('creates a folder in the root failure', () => {
+  fetch.mockResolvedValueOnce({
+    ok: false,
+    status: 404,
+    json: jest.fn().mockResolvedValue({}),
+  });
   mockJson.mockResolvedValueOnce({
     error: {
       message: 'BOO!',
@@ -53,19 +67,32 @@ test('creates a folder in the root failure', () => {
 });
 
 test('creates a folder within a subfolder', () => {
-  mockJson.mockResolvedValueOnce({
-    id: '123',
-    name: 'test',
-    parentReference: {
-      driveId: 'abc',
-    },
-  }).mockResolvedValueOnce({
-    id: '456',
-    name: 'test',
-    parentReference: {
+  fetch.mockResolvedValueOnce({
+    ok: true,
+    json: jest.fn().mockResolvedValue({
       id: '123',
-      driveId: 'abc',
-    },
+      name: 'test',
+      folder: {},
+      parentReference: {
+        driveId: 'abc',
+      },
+    }),
+  });
+  fetch.mockResolvedValueOnce({
+    ok: false,
+    status: 404,
+    json: jest.fn().mockResolvedValue({}),
+  });
+  fetch.mockResolvedValueOnce({
+    ok: true,
+    json: jest.fn().mockResolvedValue({
+      id: '456',
+      name: 'test',
+      parentReference: {
+        id: '123',
+        driveId: 'abc',
+      },
+    }),
   });
 
   const name = 'test/test2';
@@ -78,16 +105,29 @@ test('creates a folder within a subfolder', () => {
 });
 
 test('creates a folder within a subfolder no parent reference', () => {
-  mockJson.mockResolvedValueOnce({
-    id: '123',
-    name: 'test',
-  }).mockResolvedValueOnce({
-    id: '456',
-    name: 'test',
-    parentReference: {
+  fetch.mockResolvedValueOnce({
+    ok: true,
+    json: jest.fn().mockResolvedValue({
       id: '123',
-      driveId: 'abc',
-    },
+      name: 'test',
+      folder: {},
+    }),
+  });
+  fetch.mockResolvedValueOnce({
+    ok: false,
+    status: 404,
+    json: jest.fn().mockResolvedValue({}),
+  });
+  fetch.mockResolvedValueOnce({
+    ok: true,
+    json: jest.fn().mockResolvedValue({
+      id: '456',
+      name: 'test',
+      parentReference: {
+        id: '123',
+        driveId: 'abc',
+      },
+    }),
   });
 
   const name = 'test/test2';
@@ -100,22 +140,34 @@ test('creates a folder within a subfolder no parent reference', () => {
 });
 
 test('creates a folder within a remote item', () => {
-  mockJson.mockResolvedValueOnce({
-    id: '123',
-    name: 'test',
-    remoteItem: {
-      id: '789',
-      parentReference: {
-        driveId: 'def',
+  fetch.mockResolvedValueOnce({
+    ok: true,
+    json: jest.fn().mockResolvedValue({
+      id: '123',
+      name: 'test',
+      remoteItem: {
+        id: '789',
+        parentReference: {
+          driveId: 'def',
+        },
       },
-    },
-  }).mockResolvedValueOnce({
-    id: '456',
-    name: 'test',
-    parentReference: {
-      id: '789',
-      driveId: 'abc',
-    },
+    }),
+  });
+  fetch.mockResolvedValueOnce({
+    ok: false,
+    status: 404,
+    json: jest.fn().mockResolvedValue({}),
+  });
+  fetch.mockResolvedValueOnce({
+    ok: true,
+    json: jest.fn().mockResolvedValue({
+      id: '456',
+      name: 'test',
+      parentReference: {
+        id: '789',
+        driveId: 'abc',
+      },
+    }),
   });
 
   const name = 'test/test2';
@@ -128,19 +180,31 @@ test('creates a folder within a remote item', () => {
 });
 
 test('creates a folder within a remote item no parent reference', () => {
-  mockJson.mockResolvedValueOnce({
-    id: '123',
-    name: 'test',
-    remoteItem: {
-      id: '789',
-    },
-  }).mockResolvedValueOnce({
-    id: '456',
-    name: 'test',
-    parentReference: {
-      id: '789',
-      driveId: 'abc',
-    },
+  fetch.mockResolvedValueOnce({
+    ok: true,
+    json: jest.fn().mockResolvedValue({
+      id: '123',
+      name: 'test',
+      remoteItem: {
+        id: '789',
+      },
+    }),
+  });
+  fetch.mockResolvedValueOnce({
+    ok: false,
+    status: 404,
+    json: jest.fn().mockResolvedValue({}),
+  });
+  fetch.mockResolvedValueOnce({
+    ok: true,
+    json: jest.fn().mockResolvedValue({
+      id: '456',
+      name: 'test',
+      parentReference: {
+        id: '789',
+        driveId: 'abc',
+      },
+    }),
   });
 
   const name = 'test/test2';
@@ -153,20 +217,30 @@ test('creates a folder within a remote item no parent reference', () => {
 });
 
 test('creates a folder in the root with conflict', () => {
-  mockJson.mockResolvedValueOnce(mockJsonResult);
+  fetch.mockResolvedValueOnce({
+    ok: false,
+    status: 404,
+    json: jest.fn().mockResolvedValue({}),
+  });
   fetch.mockResolvedValueOnce({
     ok: false,
     status: 409,
-    json: mockJson,
+    json: jest.fn().mockResolvedValue({
+      ...mockJsonResult,
+      folder: {},
+    }),
   });
-  mockJson.mockResolvedValueOnce({
-    ...mockJsonResult,
-    remoteItem: {
-      id: '999',
-      parentReference: {
-        driveId: 'zzz',
+  fetch.mockResolvedValueOnce({
+    ok: true,
+    json: jest.fn().mockResolvedValue({
+      ...mockJsonResult,
+      remoteItem: {
+        id: '999',
+        parentReference: {
+          driveId: 'zzz',
+        },
       },
-    },
+    }),
   });
 
   const name = 'test';
@@ -182,6 +256,7 @@ test('creates a folder within a subfolder with conflict', () => {
   const parent = {
     id: '123',
     name: 'test',
+    folder: {},
     parentReference: {
       driveId: 'abc',
     },
@@ -196,17 +271,28 @@ test('creates a folder within a subfolder with conflict', () => {
     },
     folder: {},
   };
-  mockJson.mockResolvedValueOnce(parent);
-  mockJson.mockResolvedValueOnce(child);
-  mockJson.mockResolvedValueOnce(child);
 
-  fetch.mockResolvedValueOnce(mockFetchResult);
+  fetch.mockResolvedValueOnce({
+    ok: true,
+    json: jest.fn().mockResolvedValue(parent),
+  });
+
+  fetch.mockResolvedValueOnce({
+    ok: false,
+    status: 404,
+    json: jest.fn().mockResolvedValue({}),
+  });
+
   fetch.mockResolvedValueOnce({
     ok: false,
     status: 409,
-    json: mockJson,
+    json: jest.fn().mockResolvedValue(child),
   });
 
+  fetch.mockResolvedValueOnce({
+    ok: true,
+    json: jest.fn().mockResolvedValue(child),
+  });
 
   const name = 'test/test2';
   const result = ensureDir(fetch, name);
@@ -220,10 +306,22 @@ test('creates a folder within a subfolder with conflict', () => {
 test('creates a folder in the root with unresolvable conflict', () => {
   fetch.mockResolvedValueOnce({
     ok: false,
+    status: 404,
+    json: jest.fn().mockResolvedValue({}),
+  });
+  fetch.mockResolvedValueOnce({
+    ok: false,
     status: 409,
     json: mockJson,
   });
 
+  const name = 'test';
+  const result = ensureDir(fetch, name);
+
+  return expect(result).rejects.toBeInstanceOf(Error);
+});
+
+test('creates a folder where a non-folder already exists', () => {
   const name = 'test';
   const result = ensureDir(fetch, name);
 
