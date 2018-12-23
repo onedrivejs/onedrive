@@ -4,7 +4,6 @@ const createFolder = require('./create');
 
 jest.mock('./ensure-dir');
 jest.mock('../fetch');
-jest.mock('../../separator', () => () => jest.fn(stream => stream));
 
 jest.useFakeTimers();
 

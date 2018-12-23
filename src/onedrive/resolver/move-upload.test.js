@@ -15,7 +15,6 @@ jest.mock('./create');
 jest.mock('../fetch');
 jest.mock('./item');
 jest.mock('./parent');
-jest.mock('../../separator', () => () => jest.fn(stream => stream));
 
 const mockParent = {
   id: '123',
