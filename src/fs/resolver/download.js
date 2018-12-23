@@ -23,10 +23,10 @@ const createSeparator = require('../../separator');
 const createError = require('../../utils/error');
 const { formatAction, formatActionSync } = require('../../utils/format-action');
 
+const separator = createSeparator();
 const ulid = monotonicFactory();
 const stat = promisify(fs.stat);
 const utimes = promisify(fs.utimes);
-const separator = createSeparator();
 
 const shouldDownloadFile = async (directory, name, hash, modified) => {
   const path = join(directory, name);

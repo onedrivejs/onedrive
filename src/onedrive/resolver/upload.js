@@ -9,11 +9,8 @@ const { DateTime } = require('luxon');
 const getParent = require('./parent');
 const fetchItem = require('./item');
 const createFetch = require('../fetch');
-const createSeparator = require('../../separator');
 const createError = require('../../utils/error');
 const { formatAction, formatActionSync } = require('../../utils/format-action');
-
-const separator = createSeparator();
 
 const shouldUploadFile = async (refreshToken, name, hash, modified) => {
   const fetch = await createFetch(refreshToken);
@@ -79,7 +76,6 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
 
   return from(shouldUploadFile(refreshToken, name, hash, modified)).pipe(
     filter(should => !!should),
-    separator,
     flatMap(() => {
       const progress = new Subject();
       const result = new Subject();

@@ -9,7 +9,6 @@ jest.mock('./copy');
 jest.mock('./upload');
 jest.mock('../fetch');
 jest.mock('./item');
-jest.mock('../../separator', () => () => jest.fn(stream => stream));
 
 copy.mockResolvedValue(true);
 upload.mockResolvedValue(false);

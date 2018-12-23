@@ -13,6 +13,7 @@ jest.mock('./upload');
 jest.mock('./move-upload');
 jest.mock('./copy-upload');
 jest.mock('./remove');
+jest.mock('../../separator', () => () => jest.fn(stream => stream));
 
 const content = jest.fn();
 
