@@ -151,15 +151,17 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
         for (const { start, end } of chunks) {
           progress.next(formatActionSync('upload', 'start', type, name, [i + 1, chunks.length]));
 
+          const headers = {
+            'Content-Length': size > 0 ? end - start + 1 : 0,
+            'Content-Range': `bytes ${start}-${end}/${size}`,
+          };
+
           // Each request must be sync (one after the other). OneDrive does
           // not allow chunks to be uploaded out of order.
           // eslint-disable-next-line no-await-in-loop
           const response = await fetch(url, {
             method: 'PUT',
-            headers: {
-              'Content-Length': size > 0 ? end - start + 1 : 0,
-              'Content-Range': `bytes ${start}-${end}/${size}`,
-            },
+            headers,
             body: content({
               start,
               end,
@@ -171,7 +173,12 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
 
           // Gracefully handle the error somehow?
           if (!response.ok) {
-            throw createError(response, data);
+            throw createError(response, {
+              request: {
+                headers,
+              },
+              response: data,
+            });
           }
 
           progress.next(formatActionSync('upload', 'end', type, name, [i + 1, chunks.length]));
