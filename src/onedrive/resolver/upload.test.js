@@ -178,15 +178,9 @@ test('upload file failure', () => {
 });
 
 test('upload file empty', () => {
-  const name = 'test.txt';
   const result = uploadFile('1234', 'test.txt', 'abcd', DateTime.local(), 0, content).toPromise();
 
-  return expect(result).resolves.toEqual({
-    action: 'upload',
-    phase: 'end',
-    type: 'file',
-    name,
-  });
+  return expect(result).resolves.toEqual(undefined);
 });
 
 test('upload file will cancel', () => {
