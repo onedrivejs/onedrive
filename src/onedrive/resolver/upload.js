@@ -12,7 +12,12 @@ const createFetch = require('../fetch');
 const createError = require('../../utils/error');
 const { formatAction, formatActionSync } = require('../../utils/format-action');
 
-const shouldUploadFile = async (refreshToken, name, hash, modified) => {
+const shouldUploadFile = async (refreshToken, name, hash, modified, size) => {
+  // If an empty file is being added, then upload will fail.
+  if (size === 0) {
+    return false;
+  }
+
   const fetch = await createFetch(refreshToken);
   const response = await fetchItem(fetch, name);
   const data = await response.json();
@@ -74,7 +79,7 @@ const getUploadUrl = async (fetch, name) => {
 const uploadFile = (refreshToken, name, hash, modified, size, content) => {
   const type = 'file';
 
-  return from(shouldUploadFile(refreshToken, name, hash, modified)).pipe(
+  return from(shouldUploadFile(refreshToken, name, hash, modified, size)).pipe(
     filter(should => !!should),
     flatMap(() => {
       const progress = new Subject();
@@ -117,7 +122,7 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
           chunks = [
             {
               start: 0,
-              end: size > 0 ? size - 1 : 0,
+              end: size - 1,
             },
           ];
         } else {
@@ -152,7 +157,7 @@ const uploadFile = (refreshToken, name, hash, modified, size, content) => {
           progress.next(formatActionSync('upload', 'start', type, name, [i + 1, chunks.length]));
 
           const headers = {
-            'Content-Length': size > 0 ? end - start + 1 : 0,
+            'Content-Length': end - start + 1,
             'Content-Range': `bytes ${start}-${end}/${size}`,
           };
 
