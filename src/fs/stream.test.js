@@ -2,12 +2,16 @@ const { Client } = require('fb-watchman');
 const EventEmitter = require('events');
 const { DateTime } = require('luxon');
 const { take, share } = require('rxjs/operators');
+const { pathExists } = require('fs-extra');
 const createStream = require('./stream');
 
 jest.mock('fb-watchman');
+jest.mock('fs-extra');
 jest.mock('./content');
 
-const command = jest.fn();
+pathExists.mockResolvedValue(false);
+
+const command = jest.fn((options, callback) => callback(undefined, true));
 const exit = jest.spyOn(process, 'exit').mockImplementation(number => number);
 const consoleError = jest.spyOn(console, 'error').mockImplementation(error => error);
 
@@ -18,18 +22,19 @@ Client.mockImplementation(() => {
 });
 
 test('creating a filesystem stream', () => {
-  command.mockImplementationOnce((options, callback) => callback(undefined));
   const stream = createStream(new Client(), 'data');
 
   expect(stream).toBeDefined();
 });
 
 test('creating a filesystem stream error', () => {
+  pathExists.mockResolvedValue(true);
   command.mockImplementationOnce((options, callback) => callback(new Error()));
-  createStream(new Client(), 'data');
 
-  expect(exit).toHaveBeenCalledWith(1);
-  expect(consoleError).toHaveBeenCalled();
+  return createStream(new Client(), 'data').toPromise().catch(() => {
+    expect(exit).toHaveBeenCalledWith(1);
+    expect(consoleError).toHaveBeenCalled();
+  });
 });
 
 test('add event', () => {
@@ -73,32 +78,36 @@ test('add event', () => {
     ],
   });
 
-  client.emit('subscription', {
-    files: [
-      {
-        name: 'test/test2.jpg',
-        ino: 567,
-        'content.sha1hex': {
-          error: 'changed',
+  setTimeout(() => {
+    client.emit('subscription', {
+      files: [
+        {
+          name: 'test/test2.jpg',
+          ino: 567,
+          'content.sha1hex': {
+            error: 'changed',
+          },
+          type: 'f',
+          exists: true,
+          new: false,
         },
-        type: 'f',
-        exists: true,
-        new: false,
-      },
-    ],
+      ],
+    });
   });
 
-  client.emit('subscription', {
-    files: [
-      {
-        name: 'test/test2.jpg',
-        ino: 567,
-        'content.sha1hex': 'd204',
-        type: 'f',
-        exists: true,
-        new: false,
-      },
-    ],
+  setTimeout(() => {
+    client.emit('subscription', {
+      files: [
+        {
+          name: 'test/test2.jpg',
+          ino: 567,
+          'content.sha1hex': 'd204',
+          type: 'f',
+          exists: true,
+          new: false,
+        },
+      ],
+    });
   });
 
   return expect(data).resolves.toEqual([

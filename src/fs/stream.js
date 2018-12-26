@@ -1,4 +1,9 @@
-const { fromEvent, from } = require('rxjs');
+const {
+  fromEvent,
+  from,
+  merge,
+  EMPTY,
+} = require('rxjs');
 const { DateTime } = require('luxon');
 const {
   flatMap,
@@ -6,6 +11,7 @@ const {
   filter,
 } = require('rxjs/operators');
 const { join } = require('path');
+const { ensureDir, pathExists, writeJson } = require('fs-extra');
 const { log } = require('../utils/logger');
 const createContent = require('./content');
 
@@ -39,27 +45,54 @@ const createFormatAction = directory => (
   }
 );
 
+const createSubscription = async (client, directory) => {
+  await ensureDir(directory);
+  const configPath = join(directory, '.watchmanconfig');
+  const configExists = await pathExists(configPath);
+
+  // If the directory does not have a watchman config, set the config to
+  // settle in 1,000ms which should make the process safer. If this is too
+  // low (like the default 20ms) it can result in mangled files.
+  // It would be better if there was a way to do this on invocation!
+  // @see https://github.com/facebook/watchman/issues/663
+  if (!configExists) {
+    await writeJson(configPath, {
+      settle: 1000,
+    },
+    {
+      spaces: 2,
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    client.command(['subscribe', directory, 'onedrive', {
+      // Exclude files and folders that begin with .
+      expression: ['allof', ['match', '**'], ['match', '**', 'wholename']],
+      fields: ['name', 'ino', 'content.sha1hex', 'type', 'exists', 'new', 'mtime_ms', 'size'],
+    }], (error, resp) => (
+      error ? reject(error) : resolve(resp)
+    ));
+  }).catch((error) => {
+    log('error', 'Error initiating watch:', error);
+    process.exit(1);
+    throw error;
+  });
+};
+
 const stream = (client, directory) => {
   const adding = new Set();
   const hashes = new Map();
   const formatAction = createFormatAction(directory);
 
-  client.command(['subscribe', directory, 'onedrive', {
-    // Exclude files and folders that begin with .
-    expression: ['allof', ['match', '**'], ['match', '**', 'wholename']],
-    fields: ['name', 'ino', 'content.sha1hex', 'type', 'exists', 'new', 'mtime_ms', 'size'],
-  }], (error) => {
-    if (error) {
-      log('error', 'Error initiating watch:', error);
-      process.exit(1);
-    }
-  });
-
   // Debug
   // return fromEvent(client, 'subscription');
 
+  const creation = from(createSubscription(client, directory)).pipe(
+    flatMap(() => EMPTY),
+  );
+
   // Normalize filesystem events.
-  return fromEvent(client, 'subscription').pipe(
+  const listner = fromEvent(client, 'subscription').pipe(
     flatMap((resp) => {
       // Create a map of files by id.
       const fileActions = resp.files.reduce((actions, file) => {
@@ -146,7 +179,9 @@ const stream = (client, directory) => {
     filter(v => !!v),
     map((value) => {
       if (value.action === 'add' && value.hash) {
-        const [name] = [...hashes.entries()].find(([, hash]) => hash === value.hash) || [undefined];
+        const [name] = [
+          ...hashes.entries(),
+        ].find(([, hash]) => hash === value.hash) || [undefined];
         if (name) {
           hashes.set(value.name, value.hash);
           return {
@@ -172,6 +207,9 @@ const stream = (client, directory) => {
       return value;
     }),
   );
+
+  // Create the subscription and start the listener at the same time.
+  return merge(creation, listner);
 };
 
 module.exports = stream;
