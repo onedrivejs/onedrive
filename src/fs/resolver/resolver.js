@@ -33,19 +33,22 @@ const resolver = (directory) => {
       zip(work, data => data),
       flatMap((data) => {
         work.next('start');
+
+        let response = EMPTY;
+
         // Empty folders should be added.
         if (data.action === 'add' && data.type === 'folder') {
-          return createFolder(directory, data.name);
+          response = createFolder(directory, data.name);
         }
 
         // Download files that have been added or changed.
         if (['add', 'change'].includes(data.action) && data.type === 'file') {
-          return downloadFile(directory, data.name, data.hash, data.modified, data.download);
+          response = downloadFile(directory, data.name, data.hash, data.modified, data.download);
         }
 
         // Anything can be moved.
         if (data.action === 'move') {
-          return moveDownload(
+          response = moveDownload(
             directory,
             data.type,
             data.name,
@@ -60,7 +63,7 @@ const resolver = (directory) => {
         // as well. We'll skip the folder copy and wait for each file to be
         // copied.
         if (data.action === 'copy' && data.type === 'file') {
-          return copyDownloadFile(
+          response = copyDownloadFile(
             directory,
             data.name,
             data.modified,
@@ -73,7 +76,7 @@ const resolver = (directory) => {
         // Anything can be removed, but it may no longer exist if the parent
         // was removed.
         if (data.action === 'remove') {
-          return remove(directory, data.type, data.name).pipe(
+          response = remove(directory, data.type, data.name).pipe(
             map((value) => {
               // After the file remove is done, clean the trash.
               clean.next(value);
@@ -82,13 +85,11 @@ const resolver = (directory) => {
           );
         }
 
-        work.next('end');
-        return EMPTY;
-      }),
-      tap(({ phase }) => {
-        if (phase === 'end') {
-          work.next('end');
-        }
+        return response.pipe(
+          tap(undefined, undefined, () => {
+            work.next('end');
+          }),
+        );
       }),
     );
 

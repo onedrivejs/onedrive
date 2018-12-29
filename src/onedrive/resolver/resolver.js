@@ -15,13 +15,16 @@ const resolver = (refreshToken) => {
       zip(work, data => data),
       flatMap((data) => {
         work.next('start');
+
+        let response = EMPTY;
+
         if (data.action === 'add' && data.type === 'folder') {
-          return createFolder(refreshToken, data.name);
+          response = createFolder(refreshToken, data.name);
         }
 
         // Upload files that have been added or changed.
         if (data.type === 'file' && ['add', 'change'].includes(data.action)) {
-          return uploadFile(
+          response = uploadFile(
             refreshToken,
             data.name,
             data.hash,
@@ -32,7 +35,7 @@ const resolver = (refreshToken) => {
         }
 
         if (data.action === 'move') {
-          return moveUpload(
+          response = moveUpload(
             refreshToken,
             data.type,
             data.name,
@@ -48,7 +51,7 @@ const resolver = (refreshToken) => {
         // copied as well. We'll skip the folder copy and wait for each file to
         // be copied.
         if (data.type === 'file' && data.action === 'copy') {
-          return copyUploadFile(
+          response = copyUploadFile(
             refreshToken,
             data.name,
             data.hash,
@@ -62,16 +65,14 @@ const resolver = (refreshToken) => {
         // Anything can be removed, but it may no longer exist if the parent
         // was removed.
         if (data.action === 'remove') {
-          return remove(refreshToken, data.type, data.name);
+          response = remove(refreshToken, data.type, data.name);
         }
 
-        work.next('end');
-        return EMPTY;
-      }),
-      tap(({ phase }) => {
-        if (phase === 'end') {
-          work.next('end');
-        }
+        return response.pipe(
+          tap(undefined, undefined, () => {
+            work.next('end');
+          }),
+        );
       }),
     )
   );
