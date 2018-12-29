@@ -34,7 +34,8 @@ const createFetch = async (refreshToken) => {
     };
 
     try {
-      const response = await fetch(input, options);
+      const url = new URL(input, 'https://graph.microsoft.com/v1.0/').href;
+      const response = await fetch(url, options);
 
       if (response.status === 429) {
         const time = parseInt(response.headers.get('Retry-After'), 10) * 1000;

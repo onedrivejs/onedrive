@@ -1,4 +1,4 @@
-const { Subject, from } = require('rxjs');
+const { Subject, BehaviorSubject, merge } = require('rxjs');
 const { take, share } = require('rxjs/operators');
 const { formatAction } = require('../../utils/format-action');
 const createFolder = require('./create');
@@ -7,40 +7,43 @@ const moveUpload = require('./move-upload');
 const resolver = require('./resolver');
 const copyUploadFile = require('./copy-upload');
 const remove = require('./remove');
+const createWorkerSubject = require('../../work');
 
 jest.mock('./create');
 jest.mock('./upload');
 jest.mock('./move-upload');
 jest.mock('./copy-upload');
 jest.mock('./remove');
-jest.mock('../../separator', () => () => jest.fn(stream => stream));
+jest.mock('../../work');
+
+createWorkerSubject.mockImplementation(() => new BehaviorSubject(undefined));
 
 const content = jest.fn();
 
-createFolder.mockImplementation((refreshToken, name) => from([
+createFolder.mockImplementation((refreshToken, name) => merge(
   formatAction('create', 'start', 'folder', name),
   formatAction('create', 'end', 'folder', name),
-]));
+));
 
-uploadFile.mockImplementation((refreshToken, name) => from([
+uploadFile.mockImplementation((refreshToken, name) => merge(
   formatAction('upload', 'start', 'file', name),
   formatAction('upload', 'end', 'file', name),
-]));
+));
 
-moveUpload.mockImplementation((refreshToken, type, name) => from([
+moveUpload.mockImplementation((refreshToken, type, name) => merge(
   formatAction('move', 'start', type, name),
   formatAction('move', 'end', type, name),
-]));
+));
 
-copyUploadFile.mockImplementation((refreshToken, name) => from([
+copyUploadFile.mockImplementation((refreshToken, name) => merge(
   formatAction('copy', 'start', 'file', name),
   formatAction('copy', 'end', 'file', name),
-]));
+));
 
-remove.mockImplementation((refreshToken, type, name) => from([
+remove.mockImplementation((refreshToken, type, name) => merge(
   formatAction('remove', 'start', type, name),
   formatAction('remove', 'end', type, name),
-]));
+));
 
 test('resolver add folder', () => {
   const fsStream = new Subject();

@@ -12,7 +12,7 @@ const moveItem = (refreshToken, type, name, { id, parentReference: { driveId } }
       const fetch = await createFetch(refreshToken);
       const { id: parentId, driveId: parentDriveId } = await getParent(fetch, name);
 
-      const url = `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${id}`;
+      const url = `drives/${driveId}/items/${id}`;
       const response = await fetch(url, {
         method: 'PATCH',
         headers: {

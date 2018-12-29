@@ -22,7 +22,7 @@ const remove = (refreshToken, type, name) => (
       }
 
       const { id, parentReference: { driveId } } = data;
-      const url = `https://graph.microsoft.com/v1.0/me/drives/${driveId}/items/${id}`;
+      const url = `me/drives/${driveId}/items/${id}`;
       response = await fetch(url, {
         method: 'DELETE',
       });

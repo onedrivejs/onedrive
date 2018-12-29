@@ -15,9 +15,9 @@ const ensureDir = async (fetch, name) => {
     // might exist and then get deleted, but it is much faster than creating
     // the folders.
     if (!parent.driveId) {
-      url = `https://graph.microsoft.com/v1.0/me/drive/root:/${encodeURIComponent(folderName)}`;
+      url = `me/drive/root:/${encodeURIComponent(folderName)}`;
     } else {
-      url = `https://graph.microsoft.com/v1.0/drives/${parent.driveId}/items/${parent.id}:/${encodeURIComponent(folderName)}`;
+      url = `drives/${parent.driveId}/items/${parent.id}:/${encodeURIComponent(folderName)}`;
     }
 
     // eslint-disable-next-line no-await-in-loop
@@ -32,9 +32,9 @@ const ensureDir = async (fetch, name) => {
     // If the folder is missing, create it.
     if (!response.ok && response.status === 404) {
       if (!parent.driveId) {
-        url = `https://graph.microsoft.com/v1.0/me/drive/items/${parent.id}/children`;
+        url = `me/drive/items/${parent.id}/children`;
       } else {
-        url = `https://graph.microsoft.com/v1.0/drives/${parent.driveId}/items/${parent.id}/children`;
+        url = `drives/${parent.driveId}/items/${parent.id}/children`;
       }
       // eslint-disable-next-line no-await-in-loop
       response = await fetch(url, {
@@ -58,9 +58,9 @@ const ensureDir = async (fetch, name) => {
         }
 
         if (!parent.driveId) {
-          url = `https://graph.microsoft.com/v1.0/me/drive/root:/${encodeURIComponent(folderName)}`;
+          url = `me/drive/root:/${encodeURIComponent(folderName)}`;
         } else {
-          url = `https://graph.microsoft.com/v1.0/drives/${parent.driveId}/items/${parent.id}:/${encodeURIComponent(folderName)}`;
+          url = `drives/${parent.driveId}/items/${parent.id}:/${encodeURIComponent(folderName)}`;
         }
 
         response = await fetch(url); // eslint-disable-line no-await-in-loop

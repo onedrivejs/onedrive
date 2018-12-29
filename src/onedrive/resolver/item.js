@@ -6,7 +6,7 @@ const fetchItem = async (fetch, name) => {
 
   if (directory !== '.') {
     const rootFolderName = parts[0];
-    const rootFolderUrl = `https://graph.microsoft.com/v1.0/me/drive/root:/${encodeURIComponent(rootFolderName)}`;
+    const rootFolderUrl = `me/drive/root:/${encodeURIComponent(rootFolderName)}`;
     const response = await fetch(rootFolderUrl);
 
     if (!response.ok) {
@@ -19,13 +19,13 @@ const fetchItem = async (fetch, name) => {
       const { driveId } = rootFolderData.remoteItem.parentReference;
       const parentId = rootFolderData.remoteItem.id;
       const urlSafeSharedName = parts.slice(1).map(part => encodeURIComponent(part)).join('/');
-      const url = `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${parentId}:/${urlSafeSharedName}`;
+      const url = `drives/${driveId}/items/${parentId}:/${urlSafeSharedName}`;
       return fetch(url);
     }
   }
 
   const urlSafeName = parts.map(part => encodeURIComponent(part)).join('/');
-  const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${urlSafeName}`;
+  const url = `me/drive/root:/${urlSafeName}`;
   return fetch(url);
 };
 

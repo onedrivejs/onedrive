@@ -5,32 +5,35 @@ const { join } = require('path');
 const delta = require('./delta');
 const createDownload = require('./download');
 
-const formatAction = (action, file, name, hash) => {
-  let type;
-  if ('file' in file) {
-    type = 'file';
-  } else if ('folder' in file || 'remoteItem' in file) {
-    type = 'folder';
-  } else {
-    const error = new Error('Unhandled item type');
-    error.file = file;
-    throw error;
-  }
+const actionFormatter = refreshToken => (
+  (action, file, name, hash) => {
+    let type;
+    if ('file' in file) {
+      type = 'file';
+    } else if ('folder' in file || 'remoteItem' in file) {
+      type = 'folder';
+    } else {
+      const error = new Error('Unhandled item type');
+      error.file = file;
+      throw error;
+    }
 
-  return {
-    action,
-    id: file.id,
-    type,
-    name,
-    modified: file.lastModifiedDateTime ? DateTime.fromISO(file.lastModifiedDateTime) : null,
-    hash,
-    download: file['@microsoft.graph.downloadUrl'] ? createDownload(file['@microsoft.graph.downloadUrl']) : null,
-  };
-};
+    return {
+      action,
+      id: file.id,
+      type,
+      name,
+      modified: file.lastModifiedDateTime ? DateTime.fromISO(file.lastModifiedDateTime) : null,
+      hash,
+      download: file['@microsoft.graph.downloadUrl'] ? createDownload(refreshToken, file.id, file.parentReference.driveId) : null,
+    };
+  }
+);
 
 const stream = (refreshToken) => {
   const files = new Map();
   const shared = new Map();
+  const formatAction = actionFormatter(refreshToken);
 
   return delta(refreshToken).pipe(
     flatMap((file) => {

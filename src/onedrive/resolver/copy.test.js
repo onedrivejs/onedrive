@@ -64,7 +64,7 @@ test('copy file subfolder', () => {
 test('copy file unkown error', () => {
   const name = 'test2.txt';
   const fromName = 'test.txt';
-  const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${fromName}`;
+  const url = `me/drive/root:/${fromName}`;
   const data = {
     ok: false,
     status: 500,

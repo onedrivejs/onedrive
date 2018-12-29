@@ -1,23 +1,25 @@
-const fetch = require('node-fetch');
+const createFetch = require('./fetch');
 const download = require('./download');
 
-jest.mock('node-fetch');
-jest.mock('../utils/logger');
+jest.mock('./fetch');
 
 const mockFetchValue = {
   ok: true,
 };
-fetch.mockResolvedValue(mockFetchValue);
+const fetch = jest.fn().mockResolvedValue(mockFetchValue);
+
+createFetch.mockResolvedValue(fetch);
 
 test('create downloader', () => {
-  const result = download('https://example.com')();
+  const result = download('abcdef', 1234, 'zdef')();
 
   return expect(result).resolves.toEqual(mockFetchValue);
 });
 
 test('create downloader network failure', () => {
-  fetch.mockRejectedValueOnce(new Error());
-  const result = download('https://example.com')();
+  const error = new Error();
+  fetch.mockRejectedValueOnce(error);
+  const result = download('abcdef', 1234, 'zdef')();
 
-  return expect(result).resolves.toEqual(mockFetchValue);
+  return expect(result).rejects.toEqual(error);
 });

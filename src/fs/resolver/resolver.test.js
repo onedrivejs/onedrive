@@ -1,4 +1,4 @@
-const { Subject, from } = require('rxjs');
+const { Subject, BehaviorSubject, merge } = require('rxjs');
 const { take, share } = require('rxjs/operators');
 const { formatAction } = require('../../utils/format-action');
 const createFolder = require('./create');
@@ -8,6 +8,7 @@ const copyDownloadFile = require('./copy-download');
 const remove = require('./remove');
 const cleanTrash = require('./clean');
 const resolver = require('./resolver');
+const createWorkerSubject = require('../../work');
 
 jest.mock('./create');
 jest.mock('./download');
@@ -15,32 +16,34 @@ jest.mock('./move-download');
 jest.mock('./remove');
 jest.mock('./clean');
 jest.mock('./copy-download');
+jest.mock('../../work');
 
-createFolder.mockImplementation((directory, name) => from([
+createWorkerSubject.mockImplementation(() => new BehaviorSubject(undefined));
+
+createFolder.mockImplementation((directory, name) => merge(
   formatAction('create', 'start', 'folder', name),
   formatAction('create', 'end', 'folder', name),
-]));
-downloadFile.mockImplementation((directory, name) => from([
+));
+downloadFile.mockImplementation((directory, name) => merge(
   formatAction('download', 'start', 'file', name),
   formatAction('download', 'end', 'file', name),
-]));
-moveDownload.mockImplementation((directory, type, name) => from([
+));
+moveDownload.mockImplementation((directory, type, name) => merge(
   formatAction('move', 'start', type, name),
   formatAction('move', 'end', type, name),
-]));
-copyDownloadFile.mockImplementation((directory, name) => from([
+));
+copyDownloadFile.mockImplementation((directory, name) => merge(
   formatAction('copy', 'start', 'file', name),
   formatAction('copy', 'end', 'file', name),
-]));
-remove.mockImplementation((directory, type, name) => from([
+));
+remove.mockImplementation((directory, type, name) => merge(
   formatAction('remove', 'start', type, name),
   formatAction('remove', 'end', type, name),
-]));
-cleanTrash.mockImplementation(() => from([
+));
+cleanTrash.mockImplementation(() => merge(
   formatAction('trash', 'start'),
   formatAction('trash', 'end'),
-]));
-
+));
 
 test('resolver add folder', () => {
   const oneDriveStream = new Subject();
@@ -165,10 +168,10 @@ test('resolver copy file', () => {
 });
 
 test('resolver copy file download', () => {
-  copyDownloadFile.mockImplementationOnce((directory, name) => from([
+  copyDownloadFile.mockImplementationOnce((directory, name) => merge(
     formatAction('download', 'start', 'file', name),
     formatAction('download', 'end', 'file', name),
-  ]));
+  ));
   const oneDriveStream = new Subject();
   const fsResolver = resolver('/data')(oneDriveStream).pipe(share());
   const result = Promise.all([

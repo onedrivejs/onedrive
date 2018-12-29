@@ -7,7 +7,7 @@ const getParent = async (fetch, name) => {
 
   let parent;
   if (directory === '.') {
-    const url = 'https://graph.microsoft.com/v1.0/me/drive/items/root';
+    const url = 'me/drive/items/root';
     const response = await fetch(url);
     const data = await response.json();
     if (!response.ok) {
