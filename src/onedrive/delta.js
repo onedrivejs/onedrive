@@ -15,13 +15,11 @@ const createError = require('../utils/error');
 const { log } = require('../utils/logger');
 
 const delta = (refreshToken, driveId, id, cancel = new Subject()) => {
-  let link = 'https://graph.microsoft.com/v1.0/me/drive/root/delta';
+  let link = 'me/drive/root/delta';
   if (id && driveId) {
-    link = `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${id}/delta`;
+    link = `drives/${driveId}/items/${id}/delta`;
   }
-  const nextLink = (new Subject()).pipe(
-    delay(10000),
-  );
+  const nextLink = new Subject();
   const deltaLink = (new Subject()).pipe(
     delay(60000),
   );

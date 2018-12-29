@@ -60,7 +60,7 @@ test('move file unkown error', () => {
   const type = 'file';
   const name = 'test2.txt';
   const oldName = 'test.txt';
-  const url = `https://graph.microsoft.com/v1.0/me/drive/root:/${oldName}`;
+  const url = `me/drive/root:/${oldName}`;
   const data = {
     ok: false,
     status: 500,

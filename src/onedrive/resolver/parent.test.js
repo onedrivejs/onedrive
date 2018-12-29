@@ -46,7 +46,7 @@ test('get parent id request error', () => {
     ok: false,
     status: 500,
     statusText: 'ERROR',
-    url: 'https://graph.microsoft.com/v1.0/me/drive/items/root',
+    url: 'me/drive/items/root',
     json,
   };
   const error = new Error(`${data.status} ${data.statusText} ${data.url}`);

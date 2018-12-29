@@ -16,7 +16,6 @@ jest.mock('fs-extra');
 jest.mock('hasha');
 jest.mock('promisepipe');
 jest.mock('stream');
-jest.mock('../../separator', () => () => jest.fn(stream => stream));
 
 hashFromFile.mockResolvedValue('');
 // promisePipe.mockResolvedValue(undefined);

@@ -14,7 +14,7 @@ const copyFile = (refreshToken, name, { id, parentReference: { driveId } }) => {
       const fetch = await createFetch(refreshToken);
       const { id: parentId, driveId: parentDriveId } = await getParent(fetch, name);
 
-      const url = `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${id}/copy`;
+      const url = `drives/${driveId}/items/${id}/copy`;
       const response = await fetch(url, {
         method: 'POST',
         headers: {

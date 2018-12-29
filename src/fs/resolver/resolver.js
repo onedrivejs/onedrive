@@ -7,7 +7,10 @@ const {
   flatMap,
   map,
   debounceTime,
+  tap,
+  zip,
 } = require('rxjs/operators');
+const createWorkSubject = require('../../work');
 const createFolder = require('./create');
 const downloadFile = require('./download');
 const copyDownloadFile = require('./copy-download');
@@ -23,9 +26,13 @@ const resolver = (directory) => {
     flatMap(() => cleanTrash(directory)),
   );
 
+  const work = createWorkSubject(3);
+
   return (oneDriveStream) => {
     const resolved = oneDriveStream.pipe(
+      zip(work, data => data),
       flatMap((data) => {
+        work.next('start');
         // Empty folders should be added.
         if (data.action === 'add' && data.type === 'folder') {
           return createFolder(directory, data.name);
@@ -75,7 +82,13 @@ const resolver = (directory) => {
           );
         }
 
+        work.next('end');
         return EMPTY;
+      }),
+      tap(({ phase }) => {
+        if (phase === 'end') {
+          work.next('end');
+        }
       }),
     );
 
