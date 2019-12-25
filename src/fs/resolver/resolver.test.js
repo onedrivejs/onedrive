@@ -1,4 +1,4 @@
-const { Subject, BehaviorSubject, merge } = require('rxjs');
+const { Subject, merge } = require('rxjs');
 const { take, share } = require('rxjs/operators');
 const { formatAction } = require('../../utils/format-action');
 const createFolder = require('./create');
@@ -8,7 +8,6 @@ const copyDownloadFile = require('./copy-download');
 const remove = require('./remove');
 const cleanTrash = require('./clean');
 const resolver = require('./resolver');
-const createWorkerSubject = require('../../work');
 
 jest.mock('./create');
 jest.mock('./download');
@@ -16,9 +15,6 @@ jest.mock('./move-download');
 jest.mock('./remove');
 jest.mock('./clean');
 jest.mock('./copy-download');
-jest.mock('../../work');
-
-createWorkerSubject.mockImplementation(() => new BehaviorSubject(undefined));
 
 createFolder.mockImplementation((directory, name) => merge(
   formatAction('create', 'start', 'folder', name),
