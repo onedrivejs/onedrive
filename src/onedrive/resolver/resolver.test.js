@@ -7,16 +7,12 @@ const moveUpload = require('./move-upload');
 const resolver = require('./resolver');
 const copyUploadFile = require('./copy-upload');
 const remove = require('./remove');
-const createWorkerSubject = require('../../work');
 
 jest.mock('./create');
 jest.mock('./upload');
 jest.mock('./move-upload');
 jest.mock('./copy-upload');
 jest.mock('./remove');
-jest.mock('../../work');
-
-createWorkerSubject.mockImplementation(() => new BehaviorSubject(undefined));
 
 const content = jest.fn();
 
