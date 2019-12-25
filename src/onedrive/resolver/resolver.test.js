@@ -1,4 +1,4 @@
-const { Subject, BehaviorSubject, merge } = require('rxjs');
+const { Subject, merge } = require('rxjs');
 const { take, share } = require('rxjs/operators');
 const { formatAction } = require('../../utils/format-action');
 const createFolder = require('./create');

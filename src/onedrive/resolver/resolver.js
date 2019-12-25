@@ -1,5 +1,5 @@
 const { EMPTY } = require('rxjs');
-const { flatMap, tap, zip } = require('rxjs/operators');
+const { flatMap } = require('rxjs/operators');
 const createFolder = require('./create');
 const uploadFile = require('./upload');
 const moveUpload = require('./move-upload');
