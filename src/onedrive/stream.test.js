@@ -4,6 +4,7 @@ const { DateTime } = require('luxon');
 const createStream = require('./stream');
 const createDownload = require('./download');
 const delta = require('./delta');
+const ItemTypeError = require('../error/item-type');
 
 jest.mock('./delta');
 jest.mock('./download');
@@ -82,7 +83,13 @@ test('unhandled item type', () => {
 
   const data = stream.pipe(take(1)).toPromise();
 
-  const expectation = expect(data).rejects.toEqual(new Error('Unhandled item type'));
+  const expectation = expect(data).resolves.toEqual({
+    action: 'error',
+    id: '123',
+    name: 'test',
+    type: 'unknown',
+    error: new ItemTypeError(),
+  });
 
   subject.next({
     id: '123',

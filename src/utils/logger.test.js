@@ -101,18 +101,6 @@ test('log action upload onedrive', () => {
   return expect(consoleLog).toHaveBeenCalledWith('Uploading file test.txt to OneDrive start');
 });
 
-test('log action resolve onedrive', () => {
-  logAction({
-    action: 'resolve',
-    phase: 'start',
-    type: 'file',
-    name: 'test.txt',
-    system: 'onedrive',
-  });
-
-  return expect(consoleLog).toHaveBeenCalledWith('Resolving file test.txt on OneDrive start');
-});
-
 test('log action error', () => {
   const msg = 'ERROR';
   const error = new Error(msg);
@@ -265,4 +253,15 @@ test('log reaction remove', () => {
   });
 
   return expect(consoleLog).toHaveBeenCalledWith('File test.txt was removed on test');
+});
+
+test('log reaction error', () => {
+  logReaction({
+    action: 'error',
+    type: 'unknown',
+    name: 'test.txt',
+    system: 'test',
+  });
+
+  expect(consoleWarn).toHaveBeenCalledWith('WARNING', 'test.txt failed resolution on test', undefined);
 });

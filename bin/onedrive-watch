@@ -4,15 +4,13 @@ const path = require('path');
 const { Client } = require('fb-watchman');
 const dotenv = require('dotenv');
 const Sentry = require('@sentry/node');
-const { of } = require('rxjs')
-const { tap, catchError } = require('rxjs/operators');
+const { tap } = require('rxjs/operators');
 const creatFsStream = require('../src/fs/stream');
 const fsResolver = require('../src/fs/resolver/resolver');
 const createOneDriveStream = require('../src/onedrive/stream');
 const oneDriveResolver = require('../src/onedrive/resolver/resolver');
 const { checkTransit, manageTransit } = require('../src/transit');
 const { log, logAction, logReaction } = require('../src/utils/logger');
-const ItemTypeError = require('../src/error/item-type');
 const packageData = require('../package.json');
 
 // Load the environment variables.
@@ -35,7 +33,8 @@ program
 const watch = () => {
   if (typeof program.args[0] === 'undefined') {
     log('error', 'Directory argument is missing');
-    return process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   let refreshToken;
@@ -63,21 +62,6 @@ const watch = () => {
     checkTransit(),
     fsResolver(directory),
     manageTransit(),
-    catchError((error) => {
-      if (error instanceof ItemTypeError) {
-        return of({
-          system: 'onedrive',
-          action: 'resolve',
-          phase: 'error',
-          error,
-          ...error.file,
-          name: error.filename,
-          type: 'unknown',
-        });
-      }
-
-      throw error;
-    }),
   ).subscribe((data) => {
     logAction({
       system: 'fs',
@@ -103,8 +87,6 @@ const watch = () => {
       system: 'onedrive',
     });
   });
-
-  return true;
 };
 
 // Enagage
