@@ -4,6 +4,7 @@ const { DateTime } = require('luxon');
 const { join } = require('path');
 const delta = require('./delta');
 const createDownload = require('./download');
+const ItemTypeError = require('../error/item-type');
 
 const actionFormatter = refreshToken => (
   (action, file, name, hash) => {
@@ -13,9 +14,7 @@ const actionFormatter = refreshToken => (
     } else if ('folder' in file || 'remoteItem' in file) {
       type = 'folder';
     } else {
-      const error = new Error('Unhandled item type');
-      error.file = file;
-      throw error;
+      throw new ItemTypeError(file, name);
     }
 
     return {
