@@ -17,6 +17,8 @@ const getActionName = (action) => {
       return 'Removing';
     case 'clean':
       return 'Cleaning';
+    case 'resolve':
+      return 'Resolving';
     default:
       return action;
   }
