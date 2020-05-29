@@ -13,8 +13,17 @@ const actionFormatter = refreshToken => (
       type = 'file';
     } else if ('folder' in file || 'remoteItem' in file) {
       type = 'folder';
-    } else {
-      throw new ItemTypeError(file, name);
+    }
+
+    if (!type) {
+      const error = new ItemTypeError(file, name);
+      return {
+        action: 'error',
+        id: file.id,
+        type: 'unknown',
+        name: error.filename,
+        error,
+      };
     }
 
     return {

@@ -17,8 +17,6 @@ const getActionName = (action) => {
       return 'Removing';
     case 'clean':
       return 'Cleaning';
-    case 'resolve':
-      return 'Resolving';
     default:
       return action;
   }
@@ -117,13 +115,19 @@ const capitalizeFirstLetter = string => (
 
 const logReaction = ({
   action,
+  error,
   type,
   name,
   system,
 }) => {
   const fileNameText = chalk.gray(name);
 
-  return log('info', `${capitalizeFirstLetter(type)} ${fileNameText} was ${getReactionName(action)} on ${getSystemName(system)}`);
+  if (action === 'error') {
+    log('warn', `${fileNameText} failed resolution on ${getSystemName(system)}`, error);
+    return;
+  }
+
+  log('info', `${capitalizeFirstLetter(type)} ${fileNameText} was ${getReactionName(action)} on ${getSystemName(system)}`);
 };
 
 module.exports = {

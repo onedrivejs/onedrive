@@ -63,21 +63,6 @@ const watch = () => {
     checkTransit(),
     fsResolver(directory),
     manageTransit(),
-    catchError((error) => {
-      if (error instanceof ItemTypeError) {
-        return of({
-          system: 'onedrive',
-          action: 'resolve',
-          phase: 'error',
-          error,
-          ...error.file,
-          name: error.filename,
-          type: 'unknown',
-        });
-      }
-
-      throw error;
-    }),
   ).subscribe((data) => {
     logAction({
       system: 'fs',
