@@ -4,6 +4,7 @@ const { DateTime } = require('luxon');
 const { join } = require('path');
 const delta = require('./delta');
 const createDownload = require('./download');
+const createFetch = require('./fetch');
 const ResolveError = require('../error/resolve');
 
 const actionFormatter = refreshToken => (
@@ -62,17 +63,32 @@ const stream = (refreshToken) => {
         const cancel = new Subject();
         shared.set(file.id, cancel);
 
-        const remoteItemStream = delta(
-          refreshToken,
-          file.remoteItem.parentReference.driveId,
-          file.remoteItem.id,
-          cancel,
-        ).pipe(
-          // Attach the shared folder name as a namespace.
-          map(f => ({
-            ...f,
-            namespace: file,
-          })),
+        const remoteItemStream = of(file).pipe(
+          flatMap(async (ns) => {
+            // Retrieve the full remote item.
+            const fetch = await createFetch(refreshToken);
+            const response = await fetch(`drives/${ns.remoteItem.parentReference.driveId}/items/${ns.remoteItem.id}`);
+            const remoteItem = await response.json();
+
+            return {
+              ...ns,
+              remoteItem,
+            };
+          }),
+          flatMap(namespace => (
+            delta(
+              refreshToken,
+              file.remoteItem.parentReference.driveId,
+              file.remoteItem.id,
+              cancel,
+            ).pipe(
+              // Attach the shared folder name as a namespace.
+              map(f => ({
+                ...f,
+                namespace,
+              })),
+            )
+          )),
         );
 
         return concat(of(file), remoteItemStream);
@@ -93,9 +109,18 @@ const stream = (refreshToken) => {
         // /drives/abcd/items/efg!123:
         // /drives/abcd/items/efg!123:/example%20folder
         let [, parentPath] = file.parentReference.path.split(':');
+        // If the namesapce's remote item has it's own parent, remove that
+        // from the item's path.
+        if (file.namespace && file.namespace.remoteItem.parentReference.path) {
+          const [, nsParentPath] = file.namespace.remoteItem.parentReference.path.split(':');
+          const nsPath = join(nsParentPath || '/', file.namespace.remoteItem.name);
+          parentPath = parentPath.substring(nsPath.length);
+        }
         // Remove the first forward slash and the URL encoding.
         parentPath = decodeURI((parentPath || '').replace(/^\//, ''));
         if (file.namespace) {
+          // @TODO Can you put shared folders inside other folders? If so, I imagine
+          //       we should resolve the namespace's path.
           name = join(file.namespace.name, parentPath, file.name);
         } else {
           name = join(parentPath, file.name);
