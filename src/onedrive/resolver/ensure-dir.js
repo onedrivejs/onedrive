@@ -68,7 +68,7 @@ const ensureDir = async (fetch, name) => {
         data = await response.json(); // eslint-disable-line no-await-in-loop
 
         // If the response is not ok, or the item is not folder-like, throw an error.
-        if (!response.ok || (!('folder' in data) && !('remoteItem' in data))) {
+        if (!response.ok || (!('folder' in data) && !('remoteItem' in data) && !('package' in data))) {
           throw createError(response, data);
         }
       }

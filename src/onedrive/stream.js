@@ -4,19 +4,32 @@ const { DateTime } = require('luxon');
 const { join } = require('path');
 const delta = require('./delta');
 const createDownload = require('./download');
-const ItemTypeError = require('../error/item-type');
+const ResolveError = require('../error/resolve');
 
 const actionFormatter = refreshToken => (
   (action, file, name, hash) => {
+    if (name === '') {
+      const error = new ResolveError(file, name, 'Missing name');
+      return {
+        action: 'error',
+        id: file.id,
+        type: 'unknown',
+        name: error.filename,
+        error,
+      };
+    }
+
     let type;
     if ('file' in file) {
       type = 'file';
     } else if ('folder' in file || 'remoteItem' in file) {
       type = 'folder';
+    } else if ('package' in file) {
+      type = 'folder';
     }
 
     if (!type) {
-      const error = new ItemTypeError(file, name);
+      const error = new ResolveError(file, name, 'Unknown type');
       return {
         action: 'error',
         id: file.id,
