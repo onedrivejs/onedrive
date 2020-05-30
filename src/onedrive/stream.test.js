@@ -29,6 +29,7 @@ test('add event', () => {
   const data = Promise.all([
     stream.pipe(take(1)).toPromise(),
     stream.pipe(take(2)).toPromise(),
+    stream.pipe(take(3)).toPromise(),
   ]);
 
   subject.next({
@@ -54,6 +55,12 @@ test('add event', () => {
     '@microsoft.graph.downloadUrl': 'https://example.com',
   });
 
+  subject.next({
+    id: '567',
+    name: 'test notebook',
+    package: {},
+  });
+
   return expect(data).resolves.toEqual([
     {
       action: 'add',
@@ -73,6 +80,15 @@ test('add event', () => {
       hash: 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
       download: downloader,
     },
+    {
+      action: 'add',
+      download: null,
+      id: '567',
+      modified: null,
+      type: 'folder',
+      name: 'test notebook',
+      hash: null,
+    },
   ]);
 });
 
@@ -88,12 +104,35 @@ test('unhandled item type', () => {
     id: '123',
     name: 'test',
     type: 'unknown',
-    error: new ResolveError(),
+    error: new ResolveError(undefined, undefined, 'Unknown type'),
   });
 
   subject.next({
     id: '123',
     name: 'test',
+  });
+
+  return expectation;
+});
+
+test('missing name', () => {
+  const subject = new Subject();
+  delta.mockReturnValue(subject);
+  const stream = createStream('1234').pipe(share());
+
+  const data = stream.pipe(take(1)).toPromise();
+
+  const expectation = expect(data).resolves.toEqual({
+    action: 'error',
+    id: '123',
+    name: '',
+    type: 'unknown',
+    error: new ResolveError(undefined, undefined, 'Missing name'),
+  });
+
+  subject.next({
+    id: '123',
+    name: '',
   });
 
   return expectation;
