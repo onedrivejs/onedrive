@@ -1,17 +1,23 @@
-const { Subject } = require('rxjs');
+const { Subject, BehaviorSubject } = require('rxjs');
 const { take, share } = require('rxjs/operators');
 const { DateTime } = require('luxon');
 const createStream = require('./stream');
 const createDownload = require('./download');
 const delta = require('./delta');
+const createFetch = require('./fetch');
 const ResolveError = require('../error/resolve');
 
 jest.mock('./delta');
 jest.mock('./download');
+jest.mock('./fetch');
 
-const fetch = jest.fn().mockResolvedValue({});
+const fetch = jest.fn().mockResolvedValue({
+  json: jest.fn().mockResolvedValue({}),
+});
+
 const downloader = jest.fn().mockReturnValue(fetch);
 createDownload.mockReturnValue(downloader);
+createFetch.mockResolvedValue(fetch);
 
 test('creating a filesystem stream', () => {
   const subject = new Subject();
@@ -353,8 +359,20 @@ test('modified time returns datetime object', () => {
 });
 
 test('remote item starts new delta', () => {
+  const remoteItem = {
+    id: '123',
+    name: 'test',
+    parentReference: {
+      driveId: 'abcd',
+      path: '/drives/abcd/items/321:',
+    },
+  };
+  createFetch.mockResolvedValueOnce(jest.fn().mockResolvedValue({
+    json: jest.fn().mockResolvedValue(remoteItem),
+  }));
+
   const subject = new Subject();
-  const remoteItemSubject = new Subject();
+  const remoteItemSubject = new BehaviorSubject();
   delta.mockReturnValueOnce(subject);
   delta.mockReturnValueOnce(remoteItemSubject);
   const stream = createStream('1234').pipe(share());
@@ -363,16 +381,11 @@ test('remote item starts new delta', () => {
 
   subject.next({
     id: '321',
-    name: 'test',
+    name: 'test2',
     parentReference: {
       path: '/drive/root:',
     },
-    remoteItem: {
-      id: '123',
-      parentReference: {
-        driveId: 'abcd',
-      },
-    },
+    remoteItem,
   });
 
   remoteItemSubject.next({
@@ -385,7 +398,7 @@ test('remote item starts new delta', () => {
     },
     parentReference: {
       id: '123',
-      path: '/drives/abcd/items/321:',
+      path: '/drives/abcd/items/321:/test',
     },
     '@microsoft.graph.downloadUrl': 'https://example.com',
   });
@@ -395,7 +408,7 @@ test('remote item starts new delta', () => {
     id: '456',
     modified: null,
     type: 'file',
-    name: 'test/test.txt',
+    name: 'test2/test.txt',
     hash: 'd2047600b00eec51bf0dcf99c0bc7a77cc76152f',
     download: downloader,
   });
