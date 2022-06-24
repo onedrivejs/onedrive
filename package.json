@@ -21,7 +21,7 @@
     "hasha": "^3.0.0",
     "inquirer": "^6.2.0",
     "luxon": "^1.5.0",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.7",
     "promisepipe": "^3.0.0",
     "recursive-readdir": "^2.2.2",
     "rxjs": "^6.3.3",
